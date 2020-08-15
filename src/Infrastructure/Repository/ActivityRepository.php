@@ -5,12 +5,12 @@ namespace Jokuf\User\Infrastructure\Repository;
 
 
 use Jokuf\User\Authorization\ActivityInterface;
-use Jokuf\User\Authorization\Entity\Activity;
+use Jokuf\User\Authorization\ActivityRepositoryInterface;
 use Jokuf\User\Authorization\Exception\PermissionDeniedException;
 use Jokuf\User\Authorization\Factory\ActivityFactoryInterface;
 use Jokuf\User\Infrastructure\MySqlDB;
 
-class ActivityRepository
+class ActivityRepository implements ActivityRepositoryInterface
 {
     /**
      * @var MySqlDB

@@ -4,12 +4,14 @@
 namespace Jokuf\User\Infrastructure\Repository;
 
 
+use Jokuf\User\Authorization\ActivityRepositoryInterface;
 use Jokuf\User\Authorization\Exception\PermissionDeniedException;
 use Jokuf\User\Authorization\Factory\PermissionFactoryInterface;
 use Jokuf\User\Authorization\PermissionInterface;
+use Jokuf\User\Authorization\PermissionRepositoryInterface;
 use Jokuf\User\Infrastructure\MySqlDB;
 
-class PermissionRepository
+class PermissionRepository implements PermissionRepositoryInterface
 {
     /**
      * @var ActivityRepository
@@ -28,7 +30,7 @@ class PermissionRepository
      */
     private $factory;
 
-    public function __construct(MySqlDB $db, ActivityRepository $activityMapper, PermissionFactoryInterface  $factory)
+    public function __construct(MySqlDB $db, ActivityRepositoryInterface $activityMapper, PermissionFactoryInterface  $factory)
     {
         $this->db = $db;
         $this->activityMapper = $activityMapper;

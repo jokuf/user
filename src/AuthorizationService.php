@@ -14,6 +14,7 @@ use Emarref\Jwt\Verification\Context;
 use Jokuf\User\Authorization\AuthorizationInterface;
 use Jokuf\User\Infrastructure\Repository\UserRepository;
 use Jokuf\User\User\UserInterface;
+use Jokuf\User\User\UserRepositoryInterface;
 
 
 if(!defined('JWT_SECRET'))
@@ -31,7 +32,7 @@ class AuthorizationService implements AuthorizationInterface
      */
     private $userRepository;
 
-    public function __construct(UserRepository $userRepository)
+    public function __construct(UserRepositoryInterface $userRepository)
     {
         $this->userRepository = $userRepository;
         $this->storage = [];

@@ -8,13 +8,15 @@ use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\User\Exception\UserNotFoundException;
 use Jokuf\User\User\Exception\UserShoildBeTakenFromTheRepositoryFirst;
 use Jokuf\User\User\Factory\UserFactoryInterface;
+use Jokuf\User\User\RoleRepositoryInterface;
 use Jokuf\User\User\UserInterface;
+use Jokuf\User\User\UserRepositoryInterface;
 
 /**
  * Class UserRepository
  * @package Jokuf\User\Infrastructure\Repository
  */
-class UserRepository
+class UserRepository implements UserRepositoryInterface
 {
     /**
      * @var MySqlDB
@@ -40,7 +42,7 @@ class UserRepository
      * @param RoleRepository $roleMapper
      * @param UserFactoryInterface $userFactory
      */
-    public function __construct(MySqlDB $db, RoleRepository $roleMapper, UserFactoryInterface $userFactory)
+    public function __construct(MySqlDB $db, RoleRepositoryInterface $roleMapper, UserFactoryInterface $userFactory)
     {
         $this->db = $db;
         $this->roleMapper = $roleMapper;
@@ -130,7 +132,7 @@ class UserRepository
      * @param UserInterface $user
      * @throws UserShoildBeTakenFromTheRepositoryFirst
      */
-    public function update(UserInterface $user)
+    public function update(UserInterface $user): void
     {
         if (false === $user->isAuthenticated()) {
             throw new \Exception('Anonymous user cannot be updated');
@@ -145,7 +147,7 @@ class UserRepository
     /**
      * @param UserInterface $user
      */
-    public function delete(UserInterface $user)
+    public function delete(UserInterface $user): void
     {
         if (false === $user->isAuthenticated()) {
             throw new \Exception('Anonymous user cannot be deleted');
