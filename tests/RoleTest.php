@@ -1,13 +1,13 @@
 <?php
 
 
-use Jokuf\User\Domain\Entity\Activity;
-use Jokuf\User\Domain\Entity\Permission;
-use Jokuf\User\Domain\Entity\Role;
-use Jokuf\User\Infrastructure\Mapper\ActivityMapper;
-use Jokuf\User\Infrastructure\Mapper\PermissionMapper;
-use Jokuf\User\Infrastructure\Mapper\RoleMapper;
+use Jokuf\User\Infrastructure\Factory\ActivityFactory;
+use Jokuf\User\Infrastructure\Factory\PermissionFactotry;
+use Jokuf\User\Infrastructure\Factory\RoleFactory;
 use Jokuf\User\Infrastructure\MySqlDB;
+use Jokuf\User\Infrastructure\Repository\ActivityRepository;
+use Jokuf\User\Infrastructure\Repository\PermissionRepository;
+use Jokuf\User\Infrastructure\Repository\RoleRepository;
 use PHPUnit\Framework\TestCase;
 
 class RoleTest extends TestCase
@@ -17,15 +17,27 @@ class RoleTest extends TestCase
      */
     private static $db;
     /**
-     * @var RoleMapper
+     * @var RoleRepository
      */
     private $mapper;
+    /**
+     * @var ActivityFactory
+     */
+    private $activityFactory;
+    /**
+     * @var PermissionFactotry
+     */
+    private $permissionFactory;
+    /**
+     * @var RoleFactory
+     */
+    private $roleFactory;
 
     public static function setUpBeforeClass(): void
     {
         $config = [
-            'user' => 'root',
-            'pass' => '',
+            'user' => 'jokuf',
+            'pass' => 'Admin00',
         ];
 
         $schema = file_get_contents(dirname(__DIR__).'/schema.sql');
@@ -50,12 +62,20 @@ class RoleTest extends TestCase
 
     public function setUp(): void
     {
-        $this->mapper = new RoleMapper(self::$db, new PermissionMapper(self::$db, new ActivityMapper(self::$db)));
+        $this->activityFactory = new ActivityFactory();
+        $this->permissionFactory = new PermissionFactotry();
+        $this->roleFactory = new RoleFactory();
+        $this->mapper = new RoleRepository(
+            self::$db, new PermissionRepository(
+                self::$db, new ActivityRepository(
+                    self::$db, $this->activityFactory),
+                $this->permissionFactory),
+            $this->roleFactory);
     }
 
     public function testCreate() {
-        $role = new Role(null, 'Create game');
-        $this->mapper->insert($role);
+        $role = $this->roleFactory->createRole(null, 'Create game');
+        $role = $this->mapper->insert($role);
 
 
         $this->assertEquals(1, $role->getId());
@@ -71,16 +91,13 @@ class RoleTest extends TestCase
     public function testUpdate() {
         $role = $this->mapper->findForId(1);
 
-        $name = $role->getName();
+        $updatedRole = $this->roleFactory->createRole(1, 'sadsadfa');
+        $this->mapper->update($updatedRole);
 
-        $role->setName('jokuf');
-        $this->mapper->update($role);
-
-        $stmt = self::$db->execute('SELECT * FROM roles WHERE id=:id', [":id"=>  $role->getId()]);
+        $stmt = self::$db->execute('SELECT * FROM roles WHERE id=:id', [":id"=>  $updatedRole->getId()]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        $this->assertNotEquals($name, $row['name']);
-        $this->assertEquals($role->getName(), $row['name']);
+        $this->assertNotEquals($role->getName(), $row['name']);
+        $this->assertEquals($updatedRole->getName(), $row['name']);
     }
 
     public function testDelete() {
@@ -94,37 +111,25 @@ class RoleTest extends TestCase
     }
 
     public function testCreateRoleAndAttachPermissionWithSomeDummyActivities() {
-        $role = new Role(null, 'Admin');
+        $role = $this->roleFactory->createRole(null, 'Admin');
 
-        $permission = new Permission(null, 'Create game');
+        $permission = $this->permissionFactory->createPermission(null, 'Create game');
         $permission
-            ->addActivity(new Activity(null,'/adapter/slot/create', 'POST', ''));
+            ->addActivity($this->activityFactory->createActivity(null, 'POST', ''));
 
-        $permission2 = new Permission(null, 'Delete game');
+        $permission2 = $this->permissionFactory->createPermission(null, 'Delete game');
         $permission2
-            ->addActivity(new Activity(null,'/adapter/slot/delete', 'POST', ''));
+            ->addActivity($this->activityFactory->createActivity(null, 'POST', ''));
 
         $role
             ->addPermission($permission)
             ->addPermission($permission2);
 
-        $this->mapper->insert($role);
+        $role = $this->mapper->insert($role);
 
         $stmt = self::$db->execute('SELECT * FROM role_permissions WHERE roleId=:id', [":id"=> $role->getId()]);
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $this->assertCount(2, $rows);
-
-
-        $stmt = self::$db->execute('SELECT * FROM permission_activities WHERE permissionId=:id', [":id"=>  $permission->getId()]);
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        $this->assertCount(1, $rows);
-
-        $stmt = self::$db->execute('SELECT * FROM permission_activities WHERE permissionId=:id', [":id"=>  $permission2->getId()]);
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        $this->assertCount(1, $rows);
-
     }
 }

@@ -1,36 +1,43 @@
 <?php
 
 
-namespace Jokuf\User\Infrastructure\Mapper;
+namespace Jokuf\User\Infrastructure\Repository;
 
 
-use Jokuf\User\Domain\Entity\Role;
-use Jokuf\User\Domain\Entity\User;
+use Jokuf\User\Authorization\Exception\PermissionDeniedException;
+use Jokuf\User\Infrastructure\Factory\RoleFactory;
 use Jokuf\User\Infrastructure\MySqlDB;
+use Jokuf\User\Role;
+use Jokuf\User\User\RoleInterface;
 
-class RoleMapper
+class RoleRepository
 {
     /**
      * @var MySqlDB
      */
     protected $db;
     /**
-     * @var PermissionMapper
+     * @var PermissionRepository
      */
     protected $permissionMapper;
     private $identityMap;
+    /**
+     * @var RoleFactory
+     */
+    private $factory;
 
     /**
-     * RoleMapper constructor.
+     * RoleRepository constructor.
      *
      * @param MySqlDB $db
-     * @param PermissionMapper $permissionMapper
+     * @param PermissionRepository $permissionMapper
      */
-    public function __construct(MySqlDB $db, PermissionMapper $permissionMapper) {
+    public function __construct(MySqlDB $db, PermissionRepository $permissionMapper, RoleFactory $factory) {
 
         $this->db = $db;
         $this->permissionMapper = $permissionMapper;
         $this->identityMap = [];
+        $this->factory = $factory;
     }
 
     public function findForId(int $id) {
@@ -48,7 +55,7 @@ class RoleMapper
             }
 
             $permissions = $this->permissionMapper->findForRole($id);
-            $this->identityMap[$id] = new Role($id, $data['name'], $permissions);
+            $this->identityMap[$id] = $this->factory->createRole($id, $data['name'], $permissions);
         }
 
         return $this->identityMap[$id];
@@ -57,7 +64,7 @@ class RoleMapper
     /**
      * @param int $userId
      *
-     * @return Role[]
+     * @return RoleInterface[]
      */
     public function findForUser(int $userId): array
     {
@@ -73,7 +80,7 @@ class RoleMapper
             $roleId = $data['id'];
             if (!isset($this->identityMap[$roleId])) {
                 $permissions = $this->permissionMapper->findForRole($data['id']);
-                $this->identityMap[$roleId] = new Role($data['id'], $data['name'], $permissions);
+                $this->identityMap[$roleId] = $this->factory->createRole($data['id'], $data['name'], $permissions);
             }
 
             $roles[] = $this->identityMap[$roleId];
@@ -82,13 +89,18 @@ class RoleMapper
         return $roles;
     }
 
-    public function insert(Role $role)
+    public function insert(RoleInterface $role): RoleInterface
     {
-        $query = 'INSERT INTO `roles` (`name`) VALUES (:name)';
+        if (isset($this->identityMap[$role->getId()])) {
+            throw new PermissionDeniedException();
+        }
 
+        $query = 'INSERT INTO `roles` (`name`) VALUES (:name)';
         $stmt = $this->db->prepare($query);
         $stmt->execute([':name' => $role->getName()]);
-        $role->setId($this->db->lastInsertId());
+        $roleId = $this->db->lastInsertId();
+        $role = $this->factory->createRole($roleId, $role->getName(), $role->getPermissions());
+        $this->identityMap[$role->getId()] = $role;
 
         $query = 'DELETE FROM role_permissions WHERE roleId=:roleId';
         $stmt = $this->db->prepare($query);
@@ -96,7 +108,9 @@ class RoleMapper
 
         foreach ($role->getPermissions() as $permission) {
             if (null === $permission->getId()) {
-                $this->permissionMapper->insert($permission);
+                $role->removePermission($permission);
+                $permission = $this->permissionMapper->insert($permission);
+                $role->addPermission($permission);
             }
 
             $stmt = $this->db->prepare('INSERT INTO role_permissions (roleId, permissionId) VALUES (:roleId, :permissionId)');
@@ -106,13 +120,15 @@ class RoleMapper
             ]);
         }
 
-        $this->identityMap[$role->getId()] = $role;
-
         return $role;
     }
 
-    public function update(Role $role)
+    public function update(RoleInterface $role)
     {
+        if (!isset($this->identityMap[$role->getId()])) {
+            throw new \Exception("Cannot update not registered role. ");
+        }
+
         $query = 'UPDATE `roles` SET `name`=:name WHERE id=:id';
         $stmt = $this->db->prepare($query);
         $stmt->execute([':name' => $role->getName(), ':id' => $role->getId()]);
@@ -135,8 +151,11 @@ class RoleMapper
         }
     }
 
-    public function delete(Role $role): void
+    public function delete(RoleInterface $role): void
     {
+        if (!isset($this->identityMap[$role->getId()])) {
+            throw new \Exception("Cannot delete not registered role. ");
+        }
         // recreate all relations
         $query = 'DELETE FROM user_roles WHERE roleId=:roleId';
         $stmt = $this->db->prepare($query);

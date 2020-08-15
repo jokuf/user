@@ -1,13 +1,16 @@
 <?php
 
 
-namespace Jokuf\User\Infrastructure\Mapper;
+namespace Jokuf\User\Infrastructure\Repository;
 
 
-use Jokuf\User\Domain\Entity\Activity;
+use Jokuf\User\Authorization\ActivityInterface;
+use Jokuf\User\Authorization\Entity\Activity;
+use Jokuf\User\Authorization\Exception\PermissionDeniedException;
+use Jokuf\User\Authorization\Factory\ActivityFactoryInterface;
 use Jokuf\User\Infrastructure\MySqlDB;
 
-class ActivityMapper
+class ActivityRepository
 {
     /**
      * @var MySqlDB
@@ -15,14 +18,19 @@ class ActivityMapper
     private $db;
 
     private $identityMap;
+    /**
+     * @var ActivityFactoryInterface
+     */
+    private $factory;
 
-    public function __construct(MySqlDB $db)
+    public function __construct(MySqlDB $db, ActivityFactoryInterface $factory)
     {
-
         $this->db = $db;
+        $this->factory = $factory;
     }
 
-    public function findFromId(int $activityId) {
+    public function findFromId(int $activityId): ActivityInterface
+    {
         if (isset($this->identityMap[$activityId])) {
             return $this->identityMap[$activityId];
         }
@@ -37,7 +45,7 @@ class ActivityMapper
             throw new \Exception('Activity not found');
         }
 
-        $activity = new Activity($activityId, $row['method'], $row['regex']);
+        $activity =  $this->factory->createActivity($activityId, $row['method'], $row['regex']);
 
         $this->identityMap[$activityId] = $activity;
 
@@ -62,7 +70,7 @@ class ActivityMapper
             $actId = $data['id'];
 
             if (!isset($this->identityMap[$actId])) {
-                $this->identityMap[$actId] = new Activity($actId, $data['method'], $data['regex']);
+                $this->identityMap[$actId] = $this->factory->createActivity($actId, $data['method'], $data['regex']);
             }
 
             $activities[] = $this->identityMap[$actId];
@@ -71,7 +79,7 @@ class ActivityMapper
         return $activities;
     }
 
-    public function insert(Activity $activity): void
+    public function insert(ActivityInterface $activity): ActivityInterface
     {
         $query = "
             INSERT INTO `activities` 
@@ -84,15 +92,19 @@ class ActivityMapper
            ':regex' => $activity->getRegex()
         ]);
 
-
-        $activity->setId($activityId);
+        $activity = $this->factory->createActivity($activityId, $activity->getMethod(), $activity->getRegex());
 
         $this->identityMap[$activity->getId()] = $activity;
 
+        return $activity;
     }
 
-    public function update(Activity $activity): void
+    public function update(ActivityInterface $activity): void
     {
+        if (!isset($this->identityMap[$activity->getId()])) {
+            throw new \Exception("Cannot update not registered activity. ");
+        }
+
         $query = '
             UPDATE 
                 `activities` 
@@ -110,8 +122,11 @@ class ActivityMapper
 
     }
 
-    public function delete(Activity $activity): void
+    public function delete(ActivityInterface $activity): void
     {
+        if (!isset($this->identityMap[$activity->getId()])) {
+            throw new PermissionDeniedException("Cannot delete not registered activity. ");
+        }
         $query = '
             DELETE FROM 
                 permission_activities 

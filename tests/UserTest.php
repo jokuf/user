@@ -1,40 +1,59 @@
 <?php
 
 
-use Jokuf\User\Domain\Entity\Permission;
-use Jokuf\User\Domain\Entity\User;
-use Jokuf\User\Infrastructure\Mapper\ActivityMapper;
-use Jokuf\User\Infrastructure\Mapper\PermissionMapper;
-use Jokuf\User\Infrastructure\Mapper\RoleMapper;
-use Jokuf\User\Infrastructure\Mapper\UserMapper;
+use Jokuf\User\Infrastructure\Factory\ActivityFactory;
+use Jokuf\User\Infrastructure\Factory\PermissionFactotry;
+use Jokuf\User\Infrastructure\Factory\RoleFactory;
+use Jokuf\User\Infrastructure\Factory\UserFactory;
+use Jokuf\User\Infrastructure\Repository\ActivityRepository;
+use Jokuf\User\Infrastructure\Repository\PermissionRepository;
+use Jokuf\User\Infrastructure\Repository\RoleRepository;
+use Jokuf\User\Infrastructure\Repository\UserRepository;
 use Jokuf\User\Infrastructure\MySqlDB;
+use Jokuf\User\User\UserInterface;
 use PHPUnit\Framework\TestCase;
 
 class UserTest extends TestCase
 {
     protected static $db;
     /**
-     * @var UserMapper
+     * @var UserRepository
      */
-    private $userMapper;
+    private $userRepository;
     /**
-     * @var RoleMapper
+     * @var RoleRepository
      */
-    private $roleMapper;
+    private $roleRepository;
     /**
-     * @var PermissionMapper
+     * @var PermissionRepository
      */
-    private $permissionMapper;
+    private $permissionRepository;
     /**
-     * @var ActivityMapper
+     * @var ActivityRepository
      */
-    private $activityMapper;
+    private $activityRepository;
+    /**
+     * @var ActivityFactory
+     */
+    private $activityFactory;
+    /**
+     * @var PermissionFactotry
+     */
+    private $permissionFactory;
+    /**
+     * @var RoleFactory
+     */
+    private $roleFactory;
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
 
     public static function setUpBeforeClass(): void
     {
         $config = [
-            'user' => 'root',
-            'pass' => '',
+            'user' => 'jokuf',
+            'pass' => 'Admin00',
         ];
 
         $schema = file_get_contents(dirname(__DIR__).'/schema.sql');
@@ -59,10 +78,15 @@ class UserTest extends TestCase
 
     public function setUp(): void
     {
-        $this->activityMapper   = new ActivityMapper(self::$db);
-        $this->permissionMapper = new PermissionMapper(self::$db,$this->activityMapper);
-        $this->roleMapper       = new RoleMapper(self::$db, $this->permissionMapper);
-        $this->userMapper       = new UserMapper(self::$db, $this->roleMapper);
+        $this->activityFactory = new ActivityFactory();
+        $this->permissionFactory = new PermissionFactotry();
+        $this->roleFactory = new RoleFactory();
+        $this->userFactory = new UserFactory();
+
+        $this->activityRepository   = new ActivityRepository(self::$db, $this->activityFactory);
+        $this->permissionRepository = new PermissionRepository(self::$db,$this->activityRepository, $this->permissionFactory);
+        $this->roleRepository       = new RoleRepository(self::$db, $this->permissionRepository, $this->roleFactory);
+        $this->userRepository       = new UserRepository(self::$db, $this->roleRepository, $this->userFactory);
     }
 
 
@@ -70,16 +94,16 @@ class UserTest extends TestCase
     {
         /** @noinspection StaticInvocationViaThisInspection */
         $this->assertInstanceOf(
-            User::class,
-            new User(null)
+            UserInterface::class,
+            $this->userFactory->createUser('test@email.com', 'test', 'test', 'test')
         );
     }
 
     public function testCreateUserAndSaveItToDb(): void
     {
-        $user = new Jokuf\User\Domain\Entity\User(null);
-        $this->userMapper->insert($user);
-        $this->assertEquals(1, $user->getId());
+        $user = $this->userFactory->createUser( 'test@email.com', 'test', 'test', 'test');
+        $user = $this->userRepository->insert($user);
+        $this->assertEquals(1, $user->getIdentity());
     }
 
     /**
@@ -87,9 +111,9 @@ class UserTest extends TestCase
      */
     public function testGetUser(): void
     {
-        $user = $this->userMapper->findById(1);
+        $user = $this->userRepository->findById(1);
 
-        $this->assertInstanceOf(User::class, $user);
+        $this->assertInstanceOf(UserInterface::class, $user);
     }
 
     /**
@@ -99,10 +123,10 @@ class UserTest extends TestCase
     public function testDeleteUser(): void
     {
         $this->expectException(Exception::class);
-        $user = $this->userMapper->findById(1);
+        $user = $this->userRepository->findById(1);
 
-        $this->userMapper->delete($user);
+        $this->userRepository->delete($user);
 
-        $this->userMapper->findById(1);
+        $this->userRepository->findById(1);
     }
 }

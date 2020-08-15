@@ -1,11 +1,11 @@
 <?php
 
 
-use Jokuf\User\Domain\Entity\Activity;
-use Jokuf\User\Domain\Entity\Permission;
-use Jokuf\User\Infrastructure\Mapper\ActivityMapper;
-use Jokuf\User\Infrastructure\Mapper\PermissionMapper;
+use Jokuf\User\Infrastructure\Factory\ActivityFactory;
+use Jokuf\User\Infrastructure\Factory\PermissionFactotry;
 use Jokuf\User\Infrastructure\MySqlDB;
+use Jokuf\User\Infrastructure\Repository\ActivityRepository;
+use Jokuf\User\Infrastructure\Repository\PermissionRepository;
 use PHPUnit\Framework\TestCase;
 
 class PermissionTest extends TestCase
@@ -15,19 +15,27 @@ class PermissionTest extends TestCase
      */
     private static $db;
     /**
-     * @var PermissionMapper
+     * @var PermissionRepository
      */
     private $mapper;
     /**
-     * @var ActivityMapper
+     * @var ActivityRepository
      */
     private $activityMapper;
+    /**
+     * @var PermissionFactotry
+     */
+    private $permissionFactory;
+    /**
+     * @var ActivityFactory
+     */
+    private $activityFactory;
 
     public static function setUpBeforeClass(): void
     {
         $config = [
-            'user' => 'root',
-            'pass' => '',
+            'user' => 'jokuf',
+            'pass' => 'Admin00',
         ];
 
         $schema = file_get_contents(dirname(__DIR__).'/schema.sql');
@@ -52,15 +60,16 @@ class PermissionTest extends TestCase
 
     public function setUp(): void
     {
-        $this->activityMapper = new ActivityMapper(self::$db);
-        $this->mapper = new PermissionMapper(self::$db, $this->activityMapper);
+        $this->activityFactory = new ActivityFactory();
+        $this->permissionFactory = new PermissionFactotry();
+        $this->activityMapper = new ActivityRepository(self::$db, $this->activityFactory);
+        $this->mapper = new PermissionRepository(self::$db, $this->activityMapper, $this->permissionFactory);
     }
 
 
     public function testCreate() {
-        $permission = new Permission(null, 'Create game');
-        $this->mapper->insert($permission);
-
+        $permission = $this->permissionFactory->createPermission(null, 'Create game');
+        $permission = $this->mapper->insert($permission);
 
         $this->assertEquals(1, $permission->getId());
     }
@@ -75,16 +84,14 @@ class PermissionTest extends TestCase
     public function testUpdate() {
         $permission = $this->mapper->findForId(1);
 
-        $name = $permission->getName();
+        $updated = $this->permissionFactory->createPermission($permission->getId(), 'jokuf');
 
-        $permission->setName('jokuf');
-        $this->mapper->update($permission);
+        $this->mapper->update($updated);
 
         $stmt = self::$db->execute('SELECT * FROM permissions WHERE id=:id', [":id"=>  $permission->getId()]);
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $this->assertNotEquals($name, $row['name']);
-        $this->assertEquals($permission->getName(), $row['name']);
+        $this->assertEquals($updated->getName(), $row['name']);
 
     }
 
@@ -99,17 +106,18 @@ class PermissionTest extends TestCase
     }
 
     public function testCreatePermissionAndAttachNewlyCreatedActivities() {
-        $activity1  = new Activity(null, '/test/asdfa/ffa/', 'POST', '/regex1');
-        $activity2  = new Activity(null, '/test/asdfa/ffa1/', 'GET', '/regex2');
-        $activity3  = new Activity(null, '/test/asdfa/ffa2/', 'DELETE', '/regex3');
-        $activity4  = new Activity(null, '/test/asdfa/ffa2/', 'PUT', '/regex3');
-        $permission = new Permission(null, 'Can enter', [$activity1, $activity2, $activity3, $activity4]);
+        $activity1  = $this->activityFactory->createActivity(null, 'POST', '/regex1');
+        $activity2  = $this->activityFactory->createActivity(null, 'GET', '/regex2');
+        $activity3  = $this->activityFactory->createActivity(null, 'DELETE', '/regex3');
+        $activity4  = $this->activityFactory->createActivity(null, 'PUT', '/regex3');
+
+        $permission = $this->permissionFactory->createPermission(null, 'Can enter', [$activity1, $activity2, $activity3, $activity4]);
 
         $this->activityMapper->insert($activity4);
-        $this->mapper->insert($permission);
+        $permission = $this->mapper->insert($permission);
 
         $stmt = self::$db->execute('SELECT * FROM permission_activities WHERE permissionId=:id', [":id"=>  $permission->getId()]);
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $this->assertCount(4, $rows);
     }

@@ -1,30 +1,39 @@
 <?php
 
 
-namespace Jokuf\User\Infrastructure\Mapper;
+namespace Jokuf\User\Infrastructure\Repository;
 
 
-use Jokuf\User\Domain\Entity\Permission;
-use Jokuf\User\Domain\Entity\Role;
+use Jokuf\User\Authorization\Exception\PermissionDeniedException;
+use Jokuf\User\Authorization\Factory\PermissionFactoryInterface;
+use Jokuf\User\Authorization\PermissionInterface;
 use Jokuf\User\Infrastructure\MySqlDB;
 
-class PermissionMapper
+class PermissionRepository
 {
     /**
-     * @var ActivityMapper
+     * @var ActivityRepository
      */
     protected $activityMapper;
+    /**
+     * @var PermissionInterface[]
+     */
     private $identityMap;
     /**
      * @var MySqlDB
      */
     private $db;
+    /**
+     * @var PermissionFactoryInterface
+     */
+    private $factory;
 
-    public function __construct(MySqlDB $db, ActivityMapper $activityMapper)
+    public function __construct(MySqlDB $db, ActivityRepository $activityMapper, PermissionFactoryInterface  $factory)
     {
         $this->db = $db;
         $this->activityMapper = $activityMapper;
         $this->identityMap = [];
+        $this->factory = $factory;
     }
 
     public function findForId(int $permId)
@@ -38,7 +47,7 @@ class PermissionMapper
             }
 
             $activities = $this->activityMapper->findForPermission($permId);
-            $this->identityMap[$permId] = new Permission($permId, $row['name'], $activities);
+            $this->identityMap[$permId] = $this->factory->createPermission($permId, $row['name'], $activities);
         }
 
 
@@ -48,7 +57,7 @@ class PermissionMapper
     /**
      * @param int $roleId
      *
-     * @return Permission[]
+     * @return PermissionInterface[]
      */
     public function findForRole(int $roleId): array
     {
@@ -64,7 +73,7 @@ class PermissionMapper
 
             if (!isset($this->identityMap[$permId])) {
                 $activities = $this->activityMapper->findForPermission($permId);
-                $this->identityMap[$permId] = new Permission($permId, $data['name'], $activities);
+                $this->identityMap[$permId] = $this->factory->createPermission($permId, $data['name'], $activities);
             }
 
             $permissions[] = $this->identityMap[$permId];
@@ -73,23 +82,28 @@ class PermissionMapper
         return $permissions;
     }
 
-    public function insert(Permission $permission): void
+    public function insert(PermissionInterface $permission): PermissionInterface
     {
         $query = 'INSERT INTO `permissions` (`name`) VALUES (:name);';
-        $stmt        = $this->db->prepare($query);
+        $stmt  = $this->db->prepare($query);
         $stmt->execute([
             ':name' => $permission->getName()
         ]);
 
-        $permission->setId($this->db->lastInsertId());
-
+        $permissionId = $this->db->lastInsertId();
+        $permission = $this->factory->createPermission($permissionId, $permission->getName(), $permission->getActivities());
         $this->makeActivityRelations($permission);
-
         $this->identityMap[$permission->getId()] = $permission;
+
+        return $permission;
     }
 
-    public function update(Permission $permission): void
+    public function update(PermissionInterface $permission): void
     {
+        if (!isset($this->identityMap[$permission->getId()])) {
+            throw new PermissionDeniedException("Cannot update not registered permission. ");
+        }
+
         $this->dropAllActivityRelations($permission);
 
         $this->makeActivityRelations($permission);
@@ -99,8 +113,11 @@ class PermissionMapper
         $stmt->execute([':name' => $permission->getName(), ':id' => $permission->getId()]);
     }
 
-    public function delete(Permission $permission): void
+    public function delete(PermissionInterface $permission): void
     {
+        if (!isset($this->identityMap[$permission->getId()])) {
+            throw new PermissionDeniedException("Cannot delete not registered permission. ");
+        }
         // recreate all relations
         $query = 'DELETE FROM permission_activities WHERE permissionId=:permissionId';
         $stmt  = $this->db->prepare($query);
@@ -127,19 +144,20 @@ class PermissionMapper
 
 
         unset($this->identityMap[$permission->getId()]);
-
     }
 
     /**
-     * @param Permission $permission
+     * @param PermissionInterface $permission
      *
      * @return void
      */
-    protected function makeActivityRelations(Permission $permission): void
+    protected function makeActivityRelations(PermissionInterface $permission): void
     {
         foreach ($permission->getActivities() as $activity) {
             if (null === $activity->getId()) {
-                $this->activityMapper->insert($activity);
+                $permission->removeActivity($activity);
+                $activity = $this->activityMapper->insert($activity);
+                $permission->addActivity($activity);
             }
 
             $stmt = $this->db->prepare('INSERT INTO permission_activities (permissionId, activityId) VALUES (:permissionId, :activityId)');
@@ -151,11 +169,11 @@ class PermissionMapper
     }
 
     /**
-     * @param Permission $permission
+     * @param PermissionInterface $permission
      *
      * @return int
      */
-    protected function dropAllActivityRelations(Permission $permission): int
+    protected function dropAllActivityRelations(PermissionInterface $permission): int
     {
         // recreate all relations
         $query = 'DELETE FROM permission_activities WHERE permissionId=:permissionId';

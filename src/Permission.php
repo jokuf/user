@@ -1,16 +1,19 @@
 <?php
 
 
-namespace Jokuf\User\Domain\Entity;
+namespace Jokuf\User;
 
 
-class Permission
+use Jokuf\User\Authorization\ActivityInterface;
+use Jokuf\User\Authorization\PermissionInterface;
+
+class Permission implements PermissionInterface
 {
     /** @var int */
     protected $id;
     /** @var string */
     protected $name;
-    /** @var Activity[] */
+    /** @var ActivityInterface[] */
     protected $activities;
 
     public function __construct(?int $id, string $name, array $activities=[])
@@ -18,16 +21,6 @@ class Permission
         $this->id = $id;
         $this->name = $name;
         $this->activities = $activities;
-    }
-
-
-    public function setId(int $id)
-    {
-        if (null !== $this->id) {
-            throw new \LogicException('Permission id already set');
-        }
-
-        $this->id = $id;
     }
 
     /**
@@ -47,7 +40,7 @@ class Permission
     }
 
     /**
-     * @return Activity[]
+     * @return ActivityInterface[]
      */
     public function getActivities(): array
     {
@@ -55,28 +48,23 @@ class Permission
     }
 
     /**
-     * @param Activity $activity
+     * @param ActivityInterface $activity
+     * @return PermissionInterface
      */
-    public function addActivity(Activity $activity)
+    public function addActivity(ActivityInterface $activity): PermissionInterface
     {
         $this->activities[] = $activity;
+
+        return $this;
     }
 
     /**
-     * @param Activity $activity
+     * @param ActivityInterface $activity
      */
-    public function removeActivity(Activity $activity): void
+    public function removeActivity(ActivityInterface $activity): void
     {
         if (false !== $key = array_search($activity, $this->activities, true)) {
             array_splice($this->activities, $key, 1);
         }
-    }
-
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
     }
 }

@@ -1,10 +1,13 @@
 <?php
 
 
-namespace Jokuf\User\Domain\Entity;
+namespace Jokuf\User;
 
 
-class Role
+use Jokuf\User\Authorization\PermissionInterface;
+use Jokuf\User\User\RoleInterface;
+
+class Role implements RoleInterface
 {
     /** @var int */
     protected $id;
@@ -13,8 +16,6 @@ class Role
     /** @var array */
     protected $permissions;
 
-    protected $isNew;
-
     public function __construct(?int $id, string $name, array $permissions=[])
     {
         $this->id = $id;
@@ -22,14 +23,6 @@ class Role
         $this->permissions = $permissions;
     }
 
-    public function setId(int $id)
-    {
-        if (null !== $this->id) {
-            throw new \LogicException('Role id already set');
-        }
-
-        $this->id = $id;
-    }
     /**
      * @return int|null
      */
@@ -56,8 +49,9 @@ class Role
 
     /**
      * @param mixed $permission
+     * @return RoleInterface
      */
-    public function addPermission(Permission $permission): self
+    public function addPermission(PermissionInterface $permission): RoleInterface
     {
         $this->permissions[] = $permission;
 
@@ -66,21 +60,14 @@ class Role
 
     /**
      * @param mixed $permission
+     * @return RoleInterface
      */
-    public function removePermission(Permission $permission): self
+    public function removePermission(PermissionInterface $permission): RoleInterface
     {
         if (false !== $key = array_search($permission, $this->permissions, true)) {
             array_splice($this->permissions, $key, 1);
         }
 
         return $this;
-    }
-
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
     }
 }

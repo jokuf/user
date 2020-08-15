@@ -1,9 +1,10 @@
 <?php
 
 
-use Jokuf\User\Domain\Entity\Activity;
-use Jokuf\User\Infrastructure\Mapper\ActivityMapper;
+use Jokuf\User\Authorization\ActivityInterface;
+use Jokuf\User\Infrastructure\Factory\ActivityFactory;
 use Jokuf\User\Infrastructure\MySqlDB;
+use Jokuf\User\Infrastructure\Repository\ActivityRepository;
 use PHPUnit\Framework\TestCase;
 
 class ActivityTest extends TestCase
@@ -13,15 +14,19 @@ class ActivityTest extends TestCase
      */
     private static $db;
     /**
-     * @var ActivityMapper
+     * @var ActivityRepository
      */
     private $activityMapper;
+    /**
+     * @var ActivityFactory
+     */
+    private $factory;
 
     public static function setUpBeforeClass(): void
     {
         $config = [
-            'user' => 'root',
-            'pass' => '',
+            'user' => 'jokuf',
+            'pass' => 'Admin00',
         ];
 
         $schema = file_get_contents(dirname(__DIR__).'/schema.sql');
@@ -46,17 +51,17 @@ class ActivityTest extends TestCase
 
     public function setUp(): void
     {
-        $this->activityMapper   = new ActivityMapper(self::$db);
+        $this->factory = new ActivityFactory();
+        $this->activityMapper   = new ActivityRepository(self::$db, $this->factory);
     }
 
     public function testCanCreateActivity() {
-        $this->assertInstanceOf(Activity::class, new Activity(null, '/', 'POST', '[]'));
+        $this->assertInstanceOf(ActivityInterface::class, $this->factory->createActivity(null, 'POST', '[]'));
     }
 
     public function testCreateAndSaveActivity() {
-        $activity = new Activity(null, '/', 'POST', '/regex');
-
-        $this->activityMapper->insert($activity);
+        $activity = $this->factory->createActivity(null,  'POST', '/regex');
+        $activity = $this->activityMapper->insert($activity);
 
         $this->assertEquals(1, $activity->getId());
     }
@@ -69,35 +74,22 @@ class ActivityTest extends TestCase
 
     public function testUpdateActivity() {
         $activity = $this->activityMapper->findFromId(1);
+        $updatedActivity = $this->factory->createActivity(1, 'asdsafa', 'sdfasa');
 
-        $initialValues = [
-            'method' => $activity->getMethod(),
-            'regex' => $activity->getRegex()
-        ];
-
-        $activity->setRegex('asdfa');
-        $activity->setMethod('asdfa');
-
-        $this->activityMapper->update($activity);
+        $this->activityMapper->update($updatedActivity);
 
         $stmt = self::$db->execute('SELECT * FROM activities WHERE id=:id', [":id"=>  $activity->getId()]);
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $this->assertNotEquals($initialValues['method'], $row['method']);
-        $this->assertNotEquals($initialValues['regex'], $row['regex']);
-
-        $this->assertEquals($row['method'], $activity->getMethod());
-        $this->assertEquals($row['regex'], $activity->getRegex());
+        $this->assertEquals($row['method'], $updatedActivity->getMethod());
+        $this->assertEquals($row['regex'], $updatedActivity->getRegex());
     }
 
     public function testDeleteActivity()
     {
         $this->expectException(Exception::class);
-
         $activity = $this->activityMapper->findFromId(1);
-
         $this->activityMapper->delete($activity);
-
         $this->activityMapper->findFromId($activity->getId());
     }
 

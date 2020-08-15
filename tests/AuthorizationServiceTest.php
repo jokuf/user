@@ -1,16 +1,19 @@
 <?php
 
 
+use Jokuf\User\Activity;
 use Jokuf\User\AuthorizationService;
-use Jokuf\User\Domain\Entity\Activity;
-use Jokuf\User\Domain\Entity\Permission;
-use Jokuf\User\Domain\Entity\Role;
-use Jokuf\User\Domain\Entity\User;
-use Jokuf\User\Infrastructure\Mapper\ActivityMapper;
-use Jokuf\User\Infrastructure\Mapper\PermissionMapper;
-use Jokuf\User\Infrastructure\Mapper\RoleMapper;
-use Jokuf\User\Infrastructure\Mapper\UserMapper;
+use Jokuf\User\Infrastructure\Factory\ActivityFactory;
+use Jokuf\User\Infrastructure\Factory\PermissionFactotry;
+use Jokuf\User\Infrastructure\Factory\RoleFactory;
+use Jokuf\User\Infrastructure\Factory\UserFactory;
 use Jokuf\User\Infrastructure\MySqlDB;
+use Jokuf\User\Infrastructure\Repository\ActivityRepository;
+use Jokuf\User\Infrastructure\Repository\PermissionRepository;
+use Jokuf\User\Infrastructure\Repository\RoleRepository;
+use Jokuf\User\Infrastructure\Repository\UserRepository;
+use Jokuf\User\Permission;
+use Jokuf\User\Role;
 use PHPUnit\Framework\TestCase;
 
 class AuthorizationServiceTest extends TestCase
@@ -20,15 +23,15 @@ class AuthorizationServiceTest extends TestCase
      */
     private static $db;
     /**
-     * @var UserMapper
+     * @var UserRepository
      */
     private $mapper;
 
     public static function setUpBeforeClass(): void
     {
         $config = [
-            'user' => 'root',
-            'pass' => '',
+            'user' => 'jokuf',
+            'pass' => 'Admin00',
         ];
 
         $schema = file_get_contents(dirname(__DIR__).'/schema.sql');
@@ -53,16 +56,25 @@ class AuthorizationServiceTest extends TestCase
 
     public function setUp(): void
     {
-        $this->mapper =
-            new UserMapper(
-                self::$db, new RoleMapper(
-                    self::$db, new PermissionMapper(
-                        self::$db, new ActivityMapper(
-                            self::$db ))));
+
+        $this->mapper=
+            new UserRepository(
+                self::$db,
+                new RoleRepository(
+                    self::$db,
+                    new PermissionRepository(
+                        self::$db,
+                        new ActivityRepository(
+                            self::$db,
+                            new ActivityFactory()
+                        ),
+                        new PermissionFactotry()
+                    ), new RoleFactory()),
+            new UserFactory());
     }
 
     public function testAuthenticateExpectedReturnTrue() {
-        $service    = new AuthorizationService();
+        $service    = new AuthorizationService($this->mapper);
         $role       = new Role(null, 'Administrator');
         $permission = new Permission(null, 'Create game');
         $permission
@@ -70,11 +82,20 @@ class AuthorizationServiceTest extends TestCase
 
         $role->addPermission($permission);
 
-        $user = new User(null);
+        $user = new Jokuf\User\User(null, 'iordanov_@mail.bg', 'Radoslav', 'Yordanov', 'hashedpass');
         $user->addRole($role);
 
-        $this->mapper->insert($user);
+        $user = $this->mapper->insert($user);
 
         $this->assertTrue($service->authorize($user, '/api/v1/roles/1/users','POST'), 'Test authenticate service return true');
+    }
+
+    public function testFindOrCreateTokenMethodReturnsValidGuestJWTTokenWhenInvalidTokenIsProvided()
+    {
+        $service = new AuthorizationService($this->mapper);
+        $user = $service->getUserFromToken('sadsadafa');
+        $token = $service->createTokenFor($user);
+
+        $this->assertEquals($token, $service->createTokenFor($service->getUserFromToken($token)));
     }
 }
