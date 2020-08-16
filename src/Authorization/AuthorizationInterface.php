@@ -2,7 +2,6 @@
 
 namespace Jokuf\User\Authorization;
 
-use Jokuf\User\User;
 use Jokuf\User\User\UserInterface;
 
 interface AuthorizationInterface

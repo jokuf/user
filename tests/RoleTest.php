@@ -19,19 +19,7 @@ class RoleTest extends TestCase
     /**
      * @var RoleRepository
      */
-    private $mapper;
-    /**
-     * @var ActivityFactory
-     */
-    private $activityFactory;
-    /**
-     * @var PermissionFactotry
-     */
-    private $permissionFactory;
-    /**
-     * @var RoleFactory
-     */
-    private $roleFactory;
+    private $repository;
 
     public static function setUpBeforeClass(): void
     {
@@ -62,20 +50,15 @@ class RoleTest extends TestCase
 
     public function setUp(): void
     {
-        $this->activityFactory = new ActivityFactory();
-        $this->permissionFactory = new PermissionFactotry();
-        $this->roleFactory = new RoleFactory();
-        $this->mapper = new RoleRepository(
+        $this->repository = new RoleRepository(
             self::$db, new PermissionRepository(
                 self::$db, new ActivityRepository(
-                    self::$db, $this->activityFactory),
-                $this->permissionFactory),
-            $this->roleFactory);
+                    self::$db)));
     }
 
     public function testCreate() {
-        $role = $this->roleFactory->createRole(null, 'Create game');
-        $role = $this->mapper->insert($role);
+        $role = new \Jokuf\User\Role(null, 'Create game');
+        $role = $this->repository->insert($role);
 
 
         $this->assertEquals(1, $role->getId());
@@ -83,16 +66,16 @@ class RoleTest extends TestCase
 
     public function testRead()
     {
-        $role = $this->mapper->findForId(1);
+        $role = $this->repository->findForId(1);
 
         $this->assertEquals(1, $role->getId());
     }
 
     public function testUpdate() {
-        $role = $this->mapper->findForId(1);
+        $role = $this->repository->findForId(1);
 
-        $updatedRole = $this->roleFactory->createRole(1, 'sadsadfa');
-        $this->mapper->update($updatedRole);
+        $updatedRole = new \Jokuf\User\Role(1, 'sadsadfa');
+        $this->repository->update($updatedRole);
 
         $stmt = self::$db->execute('SELECT * FROM roles WHERE id=:id', [":id"=>  $updatedRole->getId()]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -103,29 +86,29 @@ class RoleTest extends TestCase
     public function testDelete() {
         $this->expectException(Exception::class);
 
-        $permisssion = $this->mapper->findForId(1);
+        $permisssion = $this->repository->findForId(1);
 
-        $this->mapper->delete($permisssion);
+        $this->repository->delete($permisssion);
 
-        $this->mapper->findForId($permisssion->getId());
+        $this->repository->findForId($permisssion->getId());
     }
 
     public function testCreateRoleAndAttachPermissionWithSomeDummyActivities() {
-        $role = $this->roleFactory->createRole(null, 'Admin');
+        $role = new \Jokuf\User\Role(null, 'Admin');
 
-        $permission = $this->permissionFactory->createPermission(null, 'Create game');
+        $permission = new \Jokuf\User\Permission(null, 'Create game');
         $permission
-            ->addActivity($this->activityFactory->createActivity(null, 'POST', ''));
+            ->addActivity(new \Jokuf\User\Activity(null, 'POST', ''));
 
-        $permission2 = $this->permissionFactory->createPermission(null, 'Delete game');
+        $permission2 = new \Jokuf\User\Permission(null, 'Delete game');
         $permission2
-            ->addActivity($this->activityFactory->createActivity(null, 'POST', ''));
+            ->addActivity(new \Jokuf\User\Activity(null, 'POST', ''));
 
         $role
             ->addPermission($permission)
             ->addPermission($permission2);
 
-        $role = $this->mapper->insert($role);
+        $role = $this->repository->insert($role);
 
         $stmt = self::$db->execute('SELECT * FROM role_permissions WHERE roleId=:id', [":id"=> $role->getId()]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);

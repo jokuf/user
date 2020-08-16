@@ -5,8 +5,8 @@ namespace Jokuf\User\Infrastructure\Repository;
 
 
 use Jokuf\User\Authorization\Exception\PermissionDeniedException;
-use Jokuf\User\Infrastructure\Factory\RoleFactory;
 use Jokuf\User\Infrastructure\MySqlDB;
+use Jokuf\User\Role;
 use Jokuf\User\User\RoleInterface;
 use Jokuf\User\User\RoleRepositoryInterface;
 
@@ -21,10 +21,6 @@ class RoleRepository implements RoleRepositoryInterface
      */
     protected $permissionMapper;
     private $identityMap;
-    /**
-     * @var RoleFactory
-     */
-    private $factory;
 
     /**
      * RoleRepository constructor.
@@ -32,14 +28,18 @@ class RoleRepository implements RoleRepositoryInterface
      * @param MySqlDB $db
      * @param PermissionRepository $permissionMapper
      */
-    public function __construct(MySqlDB $db, PermissionRepository $permissionMapper, RoleFactory $factory) {
+    public function __construct(MySqlDB $db, PermissionRepository $permissionMapper) {
 
         $this->db = $db;
         $this->permissionMapper = $permissionMapper;
         $this->identityMap = [];
-        $this->factory = $factory;
     }
 
+    /**
+     * @param int $id
+     * @return Role|mixed
+     * @throws \Exception
+     */
     public function findForId(int $id) {
         if (!isset($this->identityMap[$id])) {
             $query = 'SELECT * FROM roles r WHERE r.id = :id';
@@ -55,7 +55,7 @@ class RoleRepository implements RoleRepositoryInterface
             }
 
             $permissions = $this->permissionMapper->findForRole($id);
-            $this->identityMap[$id] = $this->factory->createRole($id, $data['name'], $permissions);
+            $this->identityMap[$id] = new Role($id, $data['name'], $permissions);
         }
 
         return $this->identityMap[$id];
@@ -80,7 +80,7 @@ class RoleRepository implements RoleRepositoryInterface
             $roleId = $data['id'];
             if (!isset($this->identityMap[$roleId])) {
                 $permissions = $this->permissionMapper->findForRole($data['id']);
-                $this->identityMap[$roleId] = $this->factory->createRole($data['id'], $data['name'], $permissions);
+                $this->identityMap[$roleId] = new Role($data['id'], $data['name'], $permissions);
             }
 
             $roles[] = $this->identityMap[$roleId];
@@ -89,6 +89,11 @@ class RoleRepository implements RoleRepositoryInterface
         return $roles;
     }
 
+    /**
+     * @param RoleInterface $role
+     * @return RoleInterface
+     * @throws PermissionDeniedException
+     */
     public function insert(RoleInterface $role): RoleInterface
     {
         if (isset($this->identityMap[$role->getId()])) {
@@ -99,7 +104,7 @@ class RoleRepository implements RoleRepositoryInterface
         $stmt = $this->db->prepare($query);
         $stmt->execute([':name' => $role->getName()]);
         $roleId = $this->db->lastInsertId();
-        $role = $this->factory->createRole($roleId, $role->getName(), $role->getPermissions());
+        $role = new Role($roleId, $role->getName(), $role->getPermissions());
         $this->identityMap[$role->getId()] = $role;
 
         $query = 'DELETE FROM role_permissions WHERE roleId=:roleId';
@@ -123,6 +128,10 @@ class RoleRepository implements RoleRepositoryInterface
         return $role;
     }
 
+    /**
+     * @param RoleInterface $role
+     * @throws \Exception
+     */
     public function update(RoleInterface $role)
     {
         if (!isset($this->identityMap[$role->getId()])) {
@@ -151,6 +160,10 @@ class RoleRepository implements RoleRepositoryInterface
         }
     }
 
+    /**
+     * @param RoleInterface $role
+     * @throws \Exception
+     */
     public function delete(RoleInterface $role): void
     {
         if (!isset($this->identityMap[$role->getId()])) {

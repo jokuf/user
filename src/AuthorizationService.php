@@ -28,6 +28,10 @@ class AuthorizationService implements AuthorizationInterface
      */
     private $userRepository;
 
+    /**
+     * AuthorizationService constructor.
+     * @param UserRepositoryInterface $userRepository
+     */
     public function __construct(UserRepositoryInterface $userRepository)
     {
         $this->userRepository = $userRepository;

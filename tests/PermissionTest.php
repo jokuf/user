@@ -1,11 +1,13 @@
 <?php
 
 
+use Jokuf\User\Activity;
 use Jokuf\User\Infrastructure\Factory\ActivityFactory;
 use Jokuf\User\Infrastructure\Factory\PermissionFactotry;
 use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\Infrastructure\Repository\ActivityRepository;
 use Jokuf\User\Infrastructure\Repository\PermissionRepository;
+use Jokuf\User\Permission;
 use PHPUnit\Framework\TestCase;
 
 class PermissionTest extends TestCase
@@ -60,15 +62,13 @@ class PermissionTest extends TestCase
 
     public function setUp(): void
     {
-        $this->activityFactory = new ActivityFactory();
-        $this->permissionFactory = new PermissionFactotry();
-        $this->activityMapper = new ActivityRepository(self::$db, $this->activityFactory);
-        $this->mapper = new PermissionRepository(self::$db, $this->activityMapper, $this->permissionFactory);
+        $this->activityMapper = new ActivityRepository(self::$db);
+        $this->mapper = new PermissionRepository(self::$db, $this->activityMapper);
     }
 
 
     public function testCreate() {
-        $permission = $this->permissionFactory->createPermission(null, 'Create game');
+        $permission = new Permission(null, 'Create game');
         $permission = $this->mapper->insert($permission);
 
         $this->assertEquals(1, $permission->getId());
@@ -84,7 +84,7 @@ class PermissionTest extends TestCase
     public function testUpdate() {
         $permission = $this->mapper->findForId(1);
 
-        $updated = $this->permissionFactory->createPermission($permission->getId(), 'jokuf');
+        $updated = new Permission($permission->getId(), 'jokuf');
 
         $this->mapper->update($updated);
 
@@ -106,12 +106,12 @@ class PermissionTest extends TestCase
     }
 
     public function testCreatePermissionAndAttachNewlyCreatedActivities() {
-        $activity1  = $this->activityFactory->createActivity(null, 'POST', '/regex1');
-        $activity2  = $this->activityFactory->createActivity(null, 'GET', '/regex2');
-        $activity3  = $this->activityFactory->createActivity(null, 'DELETE', '/regex3');
-        $activity4  = $this->activityFactory->createActivity(null, 'PUT', '/regex3');
+        $activity1  = new Activity(null, 'POST', '/regex1');
+        $activity2  = new Activity(null, 'GET', '/regex2');
+        $activity3  = new Activity(null, 'DELETE', '/regex3');
+        $activity4  = new Activity(null, 'PUT', '/regex3');
 
-        $permission = $this->permissionFactory->createPermission(null, 'Can enter', [$activity1, $activity2, $activity3, $activity4]);
+        $permission = new Permission(null, 'Can enter', [$activity1, $activity2, $activity3, $activity4]);
 
         $this->activityMapper->insert($activity4);
         $permission = $this->mapper->insert($permission);

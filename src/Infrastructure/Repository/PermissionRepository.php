@@ -6,10 +6,10 @@ namespace Jokuf\User\Infrastructure\Repository;
 
 use Jokuf\User\Authorization\ActivityRepositoryInterface;
 use Jokuf\User\Authorization\Exception\PermissionDeniedException;
-use Jokuf\User\Authorization\Factory\PermissionFactoryInterface;
 use Jokuf\User\Authorization\PermissionInterface;
 use Jokuf\User\Authorization\PermissionRepositoryInterface;
 use Jokuf\User\Infrastructure\MySqlDB;
+use Jokuf\User\Permission;
 
 class PermissionRepository implements PermissionRepositoryInterface
 {
@@ -25,19 +25,20 @@ class PermissionRepository implements PermissionRepositoryInterface
      * @var MySqlDB
      */
     private $db;
-    /**
-     * @var PermissionFactoryInterface
-     */
-    private $factory;
 
-    public function __construct(MySqlDB $db, ActivityRepositoryInterface $activityMapper, PermissionFactoryInterface  $factory)
+
+    public function __construct(MySqlDB $db, ActivityRepositoryInterface $activityMapper)
     {
         $this->db = $db;
         $this->activityMapper = $activityMapper;
         $this->identityMap = [];
-        $this->factory = $factory;
     }
 
+    /**
+     * @param int $permId
+     * @return PermissionInterface|Permission|mixed
+     * @throws \Exception
+     */
     public function findForId(int $permId)
     {
         if (!isset($this->identityMap[$permId])) {
@@ -49,7 +50,7 @@ class PermissionRepository implements PermissionRepositoryInterface
             }
 
             $activities = $this->activityMapper->findForPermission($permId);
-            $this->identityMap[$permId] = $this->factory->createPermission($permId, $row['name'], $activities);
+            $this->identityMap[$permId] = new Permission($permId, $row['name'], $activities);
         }
 
 
@@ -75,7 +76,7 @@ class PermissionRepository implements PermissionRepositoryInterface
 
             if (!isset($this->identityMap[$permId])) {
                 $activities = $this->activityMapper->findForPermission($permId);
-                $this->identityMap[$permId] = $this->factory->createPermission($permId, $data['name'], $activities);
+                $this->identityMap[$permId] = new Permission($permId, $data['name'], $activities);
             }
 
             $permissions[] = $this->identityMap[$permId];
@@ -84,6 +85,10 @@ class PermissionRepository implements PermissionRepositoryInterface
         return $permissions;
     }
 
+    /**
+     * @param PermissionInterface $permission
+     * @return PermissionInterface
+     */
     public function insert(PermissionInterface $permission): PermissionInterface
     {
         $query = 'INSERT INTO `permissions` (`name`) VALUES (:name);';
@@ -93,13 +98,17 @@ class PermissionRepository implements PermissionRepositoryInterface
         ]);
 
         $permissionId = $this->db->lastInsertId();
-        $permission = $this->factory->createPermission($permissionId, $permission->getName(), $permission->getActivities());
+        $permission = new Permission($permissionId, $permission->getName(), $permission->getActivities());
         $this->makeActivityRelations($permission);
         $this->identityMap[$permission->getId()] = $permission;
 
         return $permission;
     }
 
+    /**
+     * @param PermissionInterface $permission
+     * @throws PermissionDeniedException
+     */
     public function update(PermissionInterface $permission): void
     {
         if (!isset($this->identityMap[$permission->getId()])) {
@@ -115,6 +124,10 @@ class PermissionRepository implements PermissionRepositoryInterface
         $stmt->execute([':name' => $permission->getName(), ':id' => $permission->getId()]);
     }
 
+    /**
+     * @param PermissionInterface $permission
+     * @throws PermissionDeniedException
+     */
     public function delete(PermissionInterface $permission): void
     {
         if (!isset($this->identityMap[$permission->getId()])) {

@@ -40,12 +40,22 @@ class MySqlDB extends PDO
         $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
+    /**
+     * @param string $q
+     * @param array $params
+     * @return string
+     */
     public function insert(string $q, array $params) {
         $this->execute($q, $params);
 
         return $this->lastInsertId();
     }
 
+    /**
+     * @param string $q
+     * @param array $params
+     * @return bool|\PDOStatement
+     */
     public function execute(string $q, array $params) {
         $stmt = $this->prepare($q);
         $stmt->execute($params);

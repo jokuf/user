@@ -9,8 +9,6 @@ use Jokuf\User\User\UserInterface;
 
 class User implements UserInterface
 {
-    private const BCRYPT_DEFAULT_COST = 12;
-
     /** @var int */
     protected $id;
 
@@ -29,7 +27,7 @@ class User implements UserInterface
     /** @var string|null */
     protected $token;
 
-    /** @var Role[] */
+    /** @var RoleInterface[] */
     protected $roles;
 
     /**
@@ -39,7 +37,7 @@ class User implements UserInterface
      * @param string $name
      * @param string $lastName
      * @param string $password
-     * @param Role[] $roles
+     * @param RoleInterface[] $roles
      */
     public function __construct(?int $id, string $email, string $name, string $lastName, string $password, array $roles=[])
     {
@@ -51,41 +49,66 @@ class User implements UserInterface
         $this->id = $id;
     }
 
+    /**
+     * @return int|mixed|null
+     */
     public function getIdentity()
     {
         return $this->id;
     }
 
+    /**
+     * @return string|null
+     */
     public function getToken()
     {
         return $this->token;
     }
 
+    /**
+     * @return string|null
+     */
     public function getName()
     {
         return $this->name;
     }
 
+    /**
+     * @return string|null
+     */
     public function getLastName()
     {
         return $this->name;
     }
 
+    /**
+     * @return string|null
+     */
     public function getEmail()
     {
         return $this->email;
     }
 
+    /**
+     * @param string $password
+     * @return bool
+     */
     public function verifyPassword(string $password): bool
     {
         return password_verify($password, $this->password);
     }
 
+    /**
+     * @return bool
+     */
     public function isAuthenticated():bool
     {
         return true;
     }
 
+    /**
+     * @return RoleInterface[]
+     */
     public function getRoles(): array
     {
         return $this->roles;
@@ -109,6 +132,9 @@ class User implements UserInterface
         }
     }
 
+    /**
+     * @return string
+     */
     public function getPassword()
     {
         return $this->password;

@@ -51,16 +51,15 @@ class ActivityTest extends TestCase
 
     public function setUp(): void
     {
-        $this->factory = new ActivityFactory();
-        $this->activityMapper   = new ActivityRepository(self::$db, $this->factory);
+        $this->activityMapper   = new ActivityRepository(self::$db);
     }
 
     public function testCanCreateActivity() {
-        $this->assertInstanceOf(ActivityInterface::class, $this->factory->createActivity(null, 'POST', '[]'));
+        $this->assertInstanceOf(ActivityInterface::class, new \Jokuf\User\Activity(null, 'POST', '[]'));
     }
 
     public function testCreateAndSaveActivity() {
-        $activity = $this->factory->createActivity(null,  'POST', '/regex');
+        $activity = new \Jokuf\User\Activity(null,  'POST', '/regex');
         $activity = $this->activityMapper->insert($activity);
 
         $this->assertEquals(1, $activity->getId());
@@ -74,7 +73,7 @@ class ActivityTest extends TestCase
 
     public function testUpdateActivity() {
         $activity = $this->activityMapper->findFromId(1);
-        $updatedActivity = $this->factory->createActivity(1, 'asdsafa', 'sdfasa');
+        $updatedActivity = new \Jokuf\User\Activity(1, 'asdsafa', 'sdfasa');
 
         $this->activityMapper->update($updatedActivity);
 

@@ -4,7 +4,9 @@
 namespace Jokuf\User\Infrastructure\Repository;
 
 
+use Jokuf\User\Authorization\Exception\PermissionDeniedException;
 use Jokuf\User\Infrastructure\MySqlDB;
+use Jokuf\User\User;
 use Jokuf\User\User\Exception\UserNotFoundException;
 use Jokuf\User\User\Exception\UserShoildBeTakenFromTheRepositoryFirst;
 use Jokuf\User\User\Factory\UserFactoryInterface;
@@ -30,23 +32,17 @@ class UserRepository implements UserRepositoryInterface
      * @var UserInterface[]
      */
     protected $identityMap;
-    /**
-     * @var UserFactoryInterface
-     */
-    private $userFactory;
 
     /**
      * UserRepository constructor.
      *
      * @param MySqlDB $db
-     * @param RoleRepository $roleMapper
-     * @param UserFactoryInterface $userFactory
+     * @param RoleRepositoryInterface $roleMapper
      */
-    public function __construct(MySqlDB $db, RoleRepositoryInterface $roleMapper, UserFactoryInterface $userFactory)
+    public function __construct(MySqlDB $db, RoleRepositoryInterface $roleMapper)
     {
         $this->db = $db;
         $this->roleMapper = $roleMapper;
-        $this->userFactory = $userFactory;
         $this->identityMap = [];
     }
 
@@ -89,7 +85,7 @@ class UserRepository implements UserRepositoryInterface
 
         $roles = $this->roleMapper->findForUser($id);
 
-        $this->identityMap[$id] = $this->userFactory->loadUser($id, $row['email'], $row['name'], $row['lastName'], $row['password'], $roles);
+        $this->identityMap[$id] = new User($id, $row['email'], $row['name'], $row['lastName'], $row['password'], $roles);
 
         return $this->identityMap[$id];
     }
@@ -113,7 +109,7 @@ class UserRepository implements UserRepositoryInterface
             ':pass' => $user->getPassword()
         ]);
 
-        $user = $this->userFactory->loadUser(
+        $user = new User(
             $this->db->lastInsertId(),
             $user->getEmail(),
             $user->getName(),
@@ -146,6 +142,7 @@ class UserRepository implements UserRepositoryInterface
 
     /**
      * @param UserInterface $user
+     * @throws \Exception
      */
     public function delete(UserInterface $user): void
     {
@@ -176,6 +173,7 @@ class UserRepository implements UserRepositoryInterface
 
     /**
      * @param UserInterface $user
+     * @throws PermissionDeniedException
      */
     private function saveUserRoles(UserInterface $user): void
     {

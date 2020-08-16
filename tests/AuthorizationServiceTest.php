@@ -65,12 +65,9 @@ class AuthorizationServiceTest extends TestCase
                     new PermissionRepository(
                         self::$db,
                         new ActivityRepository(
-                            self::$db,
-                            new ActivityFactory()
-                        ),
-                        new PermissionFactotry()
-                    ), new RoleFactory()),
-            new UserFactory());
+                            self::$db
+                        )
+                    )));
     }
 
     public function testAuthenticateExpectedReturnTrue() {

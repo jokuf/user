@@ -10,6 +10,7 @@ use Jokuf\User\Infrastructure\Repository\PermissionRepository;
 use Jokuf\User\Infrastructure\Repository\RoleRepository;
 use Jokuf\User\Infrastructure\Repository\UserRepository;
 use Jokuf\User\Infrastructure\MySqlDB;
+use Jokuf\User\User;
 use Jokuf\User\User\UserInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -78,15 +79,11 @@ class UserTest extends TestCase
 
     public function setUp(): void
     {
-        $this->activityFactory = new ActivityFactory();
-        $this->permissionFactory = new PermissionFactotry();
-        $this->roleFactory = new RoleFactory();
-        $this->userFactory = new UserFactory();
 
-        $this->activityRepository   = new ActivityRepository(self::$db, $this->activityFactory);
-        $this->permissionRepository = new PermissionRepository(self::$db,$this->activityRepository, $this->permissionFactory);
-        $this->roleRepository       = new RoleRepository(self::$db, $this->permissionRepository, $this->roleFactory);
-        $this->userRepository       = new UserRepository(self::$db, $this->roleRepository, $this->userFactory);
+        $this->activityRepository   = new ActivityRepository(self::$db);
+        $this->permissionRepository = new PermissionRepository(self::$db,$this->activityRepository);
+        $this->roleRepository       = new RoleRepository(self::$db, $this->permissionRepository);
+        $this->userRepository       = new UserRepository(self::$db, $this->roleRepository);
     }
 
 
@@ -95,13 +92,13 @@ class UserTest extends TestCase
         /** @noinspection StaticInvocationViaThisInspection */
         $this->assertInstanceOf(
             UserInterface::class,
-            $this->userFactory->createUser('test@email.com', 'test', 'test', 'test')
+            new User(null, 'test@email.com', 'test', 'test', 'test')
         );
     }
 
     public function testCreateUserAndSaveItToDb(): void
     {
-        $user = $this->userFactory->createUser( 'test@email.com', 'test', 'test', 'test');
+        $user = new User(null, 'test@email.com', 'test', 'test', 'test');
         $user = $this->userRepository->insert($user);
         $this->assertEquals(1, $user->getIdentity());
     }

@@ -4,10 +4,10 @@
 namespace Jokuf\User\Infrastructure\Repository;
 
 
+use Jokuf\User\Activity;
 use Jokuf\User\Authorization\ActivityInterface;
 use Jokuf\User\Authorization\ActivityRepositoryInterface;
 use Jokuf\User\Authorization\Exception\PermissionDeniedException;
-use Jokuf\User\Authorization\Factory\ActivityFactoryInterface;
 use Jokuf\User\Infrastructure\MySqlDB;
 
 class ActivityRepository implements ActivityRepositoryInterface
@@ -18,17 +18,18 @@ class ActivityRepository implements ActivityRepositoryInterface
     private $db;
 
     private $identityMap;
-    /**
-     * @var ActivityFactoryInterface
-     */
-    private $factory;
 
-    public function __construct(MySqlDB $db, ActivityFactoryInterface $factory)
+
+    public function __construct(MySqlDB $db)
     {
         $this->db = $db;
-        $this->factory = $factory;
     }
 
+    /**
+     * @param int $activityId
+     * @return ActivityInterface
+     * @throws \Exception
+     */
     public function findFromId(int $activityId): ActivityInterface
     {
         if (isset($this->identityMap[$activityId])) {
@@ -45,13 +46,17 @@ class ActivityRepository implements ActivityRepositoryInterface
             throw new \Exception('Activity not found');
         }
 
-        $activity =  $this->factory->createActivity($activityId, $row['method'], $row['regex']);
+        $activity =  new Activity($activityId, $row['method'], $row['regex']);
 
         $this->identityMap[$activityId] = $activity;
 
         return $activity;
     }
 
+    /**
+     * @param int $permissionId
+     * @return array
+     */
     public function findForPermission(int $permissionId): array
     {
         $activities = [];
@@ -70,7 +75,7 @@ class ActivityRepository implements ActivityRepositoryInterface
             $actId = $data['id'];
 
             if (!isset($this->identityMap[$actId])) {
-                $this->identityMap[$actId] = $this->factory->createActivity($actId, $data['method'], $data['regex']);
+                $this->identityMap[$actId] = new Activity($actId, $data['method'], $data['regex']);
             }
 
             $activities[] = $this->identityMap[$actId];
@@ -79,6 +84,10 @@ class ActivityRepository implements ActivityRepositoryInterface
         return $activities;
     }
 
+    /**
+     * @param ActivityInterface $activity
+     * @return ActivityInterface
+     */
     public function insert(ActivityInterface $activity): ActivityInterface
     {
         $query = "
@@ -92,13 +101,17 @@ class ActivityRepository implements ActivityRepositoryInterface
            ':regex' => $activity->getRegex()
         ]);
 
-        $activity = $this->factory->createActivity($activityId, $activity->getMethod(), $activity->getRegex());
+        $activity = new Activity($activityId, $activity->getMethod(), $activity->getRegex());
 
         $this->identityMap[$activity->getId()] = $activity;
 
         return $activity;
     }
 
+    /**
+     * @param ActivityInterface $activity
+     * @throws \Exception
+     */
     public function update(ActivityInterface $activity): void
     {
         if (!isset($this->identityMap[$activity->getId()])) {
@@ -122,6 +135,10 @@ class ActivityRepository implements ActivityRepositoryInterface
 
     }
 
+    /**
+     * @param ActivityInterface $activity
+     * @throws PermissionDeniedException
+     */
     public function delete(ActivityInterface $activity): void
     {
         if (!isset($this->identityMap[$activity->getId()])) {
