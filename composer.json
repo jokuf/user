@@ -7,7 +7,7 @@
         }
     ],
     "require": {
-        "emarref/jwt": "^1.0"
+        "firebase/php-jwt": "^5.2"
     },
     "autoload": {
         "psr-4": {

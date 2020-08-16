@@ -11,7 +11,7 @@ class AnonymousUser implements UserInterface
 {
     public function getIdentity()
     {
-        return null;
+        return 0;
     }
 
     public function getName()

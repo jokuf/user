@@ -5,12 +5,8 @@ namespace Jokuf\User;
 
 
 use DateTime;
-use Emarref\Jwt\Algorithm\Hs256;
-use Emarref\Jwt\Encryption\Factory;
-use Emarref\Jwt\Jwt;
-use Emarref\Jwt\Token;
-use Emarref\Jwt\Claim;
-use Emarref\Jwt\Verification\Context;
+
+use Firebase\JWT\JWT;
 use Jokuf\User\Authorization\AuthorizationInterface;
 use Jokuf\User\Infrastructure\Repository\UserRepository;
 use Jokuf\User\User\UserInterface;
@@ -40,52 +36,37 @@ class AuthorizationService implements AuthorizationInterface
 
     public function getUserFromToken(?string $serializedToken=''): UserInterface
     {
-        if (null === $serializedToken || empty($serializedToken)) {
-            return new AnonymousUser();
-        }
-
-        $jwt        = new Jwt();
-        $algorithm  = new Hs256(JWT_SECRET);
-        $encryption = Factory::create($algorithm);
         try {
-            $context    = new Context($encryption);
-            $token      = $jwt->deserialize($serializedToken);
-            $jwt->verify($token, $context);
+            $payload = JWT::decode($serializedToken, JWT_SECRET, ['HS256']);
 
-            $userIdClaim = $token->getPayload()->findClaimByName('userId');
-
-            $identity = $userIdClaim->getValue();
-
-            return $this->userRepository->findById($identity);
+            return $this->userRepository->findByEmail($payload->identity);
         } catch (\Exception $e) {
-            return new AnonymousUser();
         }
+
+        return new AnonymousUser();
     }
 
     public function createTokenFor(UserInterface $user): string
     {
-        $jwt        = new Jwt();
-        $algorithm  = new Hs256(JWT_SECRET);
-        $encryption = Factory::create($algorithm);
         $serializedToken = $this->getToken($user);
 
         if ($serializedToken) {
             try {
-                $context    = new Context($encryption);
-                $token      = $jwt->deserialize($serializedToken);
-                $jwt->verify($token, $context);
+                JWT::decode($serializedToken, JWT_SECRET, ['HS256']);
 
                 return $serializedToken;
             } catch (\Exception $e) {}
         }
 
-        $token = new Token();
-        $token->addClaim(new Claim\Expiration(new DateTime(JWT_EXPIRE_TIME)));
-        $token->addClaim(new Claim\IssuedAt(new DateTime('now')));
-        $token->addClaim(new Claim\Issuer(__METHOD__));
-        $token->addClaim(new Claim\PrivateClaim('identity', $user->getIdentity()));
-
-        $serializedToken = $jwt->serialize($token, $encryption);
+        $serializedToken = JWT::encode(
+            [
+                "iss" => $_SERVER['HTTP_HOST'] ?? 'local',
+                "aud" => $_SERVER['HTTP_HOST'] ?? 'local',
+                "iat" => time(),
+                'identity' => $user->getEmail()
+            ],
+            JWT_SECRET,
+            'HS256');
 
         $this->storeToken($user, $serializedToken);
 
