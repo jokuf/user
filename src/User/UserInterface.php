@@ -8,6 +8,11 @@ namespace Jokuf\User\User;
 interface UserInterface
 {
     /**
+     * @param int $id
+     * @return mixed
+     */
+    public function setId(int $id);
+    /**
      * @return mixed|null
      */
     public function getIdentity();

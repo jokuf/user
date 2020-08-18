@@ -101,8 +101,7 @@ class ActivityRepository implements ActivityRepositoryInterface
            ':regex' => $activity->getRegex()
         ]);
 
-        $activity = new Activity($activityId, $activity->getMethod(), $activity->getRegex());
-
+        $activity->setId($activityId);
         $this->identityMap[$activity->getId()] = $activity;
 
         return $activity;

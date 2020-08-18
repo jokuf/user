@@ -87,4 +87,9 @@ class AnonymousUser implements UserInterface
     public function removeRole(RoleInterface $role)
     {
     }
+
+    public function setId(int $id)
+    {
+        // TODO: Implement setId() method.
+    }
 }

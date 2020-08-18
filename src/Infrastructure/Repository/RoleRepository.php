@@ -103,8 +103,7 @@ class RoleRepository implements RoleRepositoryInterface
         $query = 'INSERT INTO `roles` (`name`) VALUES (:name)';
         $stmt = $this->db->prepare($query);
         $stmt->execute([':name' => $role->getName()]);
-        $roleId = $this->db->lastInsertId();
-        $role = new Role($roleId, $role->getName(), $role->getPermissions());
+        $role->setId($this->db->lastInsertId());
         $this->identityMap[$role->getId()] = $role;
 
         $query = 'DELETE FROM role_permissions WHERE roleId=:roleId';
@@ -113,9 +112,7 @@ class RoleRepository implements RoleRepositoryInterface
 
         foreach ($role->getPermissions() as $permission) {
             if (null === $permission->getId()) {
-                $role->removePermission($permission);
-                $permission = $this->permissionMapper->insert($permission);
-                $role->addPermission($permission);
+                $this->permissionMapper->insert($permission);
             }
 
             $stmt = $this->db->prepare('INSERT INTO role_permissions (roleId, permissionId) VALUES (:roleId, :permissionId)');

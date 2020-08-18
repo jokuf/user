@@ -26,6 +26,13 @@ class Activity implements ActivityInterface
         $this->regex = $regex;
     }
 
+    public function setId(int $id) {
+        if ($this->id) {
+            throw new \UnexpectedValueException('Id already set');
+        }
+
+        $this->id = $id;
+    }
     /**
      * @return mixed
      */

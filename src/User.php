@@ -49,6 +49,14 @@ class User implements UserInterface
         $this->id = $id;
     }
 
+    public function setId(int $id) {
+        if ($this->id) {
+            throw new \UnexpectedValueException('Id already set');
+        }
+
+        $this->id = $id;
+    }
+
     /**
      * @return int|mixed|null
      */

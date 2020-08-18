@@ -8,6 +8,11 @@ use Jokuf\User\Authorization\PermissionInterface;
 interface RoleInterface
 {
     /**
+     * @param int $id
+     * @return mixed
+     */
+    public function setId(int $id);
+    /**
      * @return int|null
      */
     public function getId(): ?int;

@@ -98,7 +98,7 @@ class PermissionRepository implements PermissionRepositoryInterface
         ]);
 
         $permissionId = $this->db->lastInsertId();
-        $permission = new Permission($permissionId, $permission->getName(), $permission->getActivities());
+        $permission->setId($permissionId);
         $this->makeActivityRelations($permission);
         $this->identityMap[$permission->getId()] = $permission;
 
@@ -170,9 +170,7 @@ class PermissionRepository implements PermissionRepositoryInterface
     {
         foreach ($permission->getActivities() as $activity) {
             if (null === $activity->getId()) {
-                $permission->removeActivity($activity);
-                $activity = $this->activityMapper->insert($activity);
-                $permission->addActivity($activity);
+                $this->activityMapper->insert($activity);
             }
 
             $stmt = $this->db->prepare('INSERT INTO permission_activities (permissionId, activityId) VALUES (:permissionId, :activityId)');

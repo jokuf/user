@@ -23,6 +23,13 @@ class Permission implements PermissionInterface
         $this->activities = $activities;
     }
 
+    public function setId(int $id) {
+        if ($this->id) {
+            throw new \UnexpectedValueException('Id already set');
+        }
+
+        $this->id = $id;
+    }
     /**
      * @return int|null
      */

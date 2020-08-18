@@ -5,6 +5,11 @@ namespace Jokuf\User\Authorization;
 interface PermissionInterface
 {
     /**
+     * @param int $id
+     * @return mixed
+     */
+    public function setId(int $id);
+    /**
      * @return int|null
      */
     public function getId(): ?int;

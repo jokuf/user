@@ -23,6 +23,13 @@ class Role implements RoleInterface
         $this->permissions = $permissions;
     }
 
+    public function setId(int $id) {
+        if ($this->id) {
+            throw new \UnexpectedValueException('Id already set');
+        }
+
+        $this->id = $id;
+    }
     /**
      * @return int|null
      */

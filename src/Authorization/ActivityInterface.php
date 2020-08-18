@@ -5,6 +5,11 @@ namespace Jokuf\User\Authorization;
 interface ActivityInterface
 {
     /**
+     * @param int $id
+     * @return mixed
+     */
+    public function setId(int $id);
+    /**
      * @return mixed
      */
     public function getId(): ?int;

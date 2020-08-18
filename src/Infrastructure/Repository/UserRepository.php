@@ -109,15 +109,7 @@ class UserRepository implements UserRepositoryInterface
             ':pass' => $user->getPassword()
         ]);
 
-        $user = new User(
-            $this->db->lastInsertId(),
-            $user->getEmail(),
-            $user->getName(),
-            $user->getLastName(),
-            $user->getPassword(),
-            $user->getRoles()
-        );
-
+        $user->setId($this->db->lastInsertId());
         $this->saveUserRoles($user);
         $this->identityMap[$user->getIdentity()] = $user;
 
@@ -185,9 +177,7 @@ class UserRepository implements UserRepositoryInterface
 
         foreach ($user->getRoles() as $role) {
             if (null === $role->getId()) {
-                $user->removeRole($role);
-                $role = $this->roleMapper->insert($role);
-                $user->addRole($role);
+                $this->roleMapper->insert($role);
             }
 
             $stmt = $this->db->prepare('INSERT INTO user_roles (userId, roleId) VALUES (:userId, :roleId)');
