@@ -12,7 +12,7 @@ use Jokuf\User\User\UserRepositoryInterface;
 
 
 if(!defined('JWT_SECRET'))
-    define('JWT_SECRET', password_hash('verysecret', PASSWORD_BCRYPT, ['cost' => 12]));
+    define('JWT_SECRET', hash('sha3-512' , 'pass'));
 
 if (!defined('JWT_EXPIRE_TIME'))
     define('JWT_EXPIRE_TIME', '45 minutes');

@@ -1,10 +1,6 @@
 <?php
 
 
-use Jokuf\User\Infrastructure\Factory\ActivityFactory;
-use Jokuf\User\Infrastructure\Factory\PermissionFactotry;
-use Jokuf\User\Infrastructure\Factory\RoleFactory;
-use Jokuf\User\Infrastructure\Factory\UserFactory;
 use Jokuf\User\Infrastructure\Repository\ActivityRepository;
 use Jokuf\User\Infrastructure\Repository\PermissionRepository;
 use Jokuf\User\Infrastructure\Repository\RoleRepository;
@@ -21,34 +17,6 @@ class UserTest extends TestCase
      * @var UserRepository
      */
     private $userRepository;
-    /**
-     * @var RoleRepository
-     */
-    private $roleRepository;
-    /**
-     * @var PermissionRepository
-     */
-    private $permissionRepository;
-    /**
-     * @var ActivityRepository
-     */
-    private $activityRepository;
-    /**
-     * @var ActivityFactory
-     */
-    private $activityFactory;
-    /**
-     * @var PermissionFactotry
-     */
-    private $permissionFactory;
-    /**
-     * @var RoleFactory
-     */
-    private $roleFactory;
-    /**
-     * @var UserFactory
-     */
-    private $userFactory;
 
     public static function setUpBeforeClass(): void
     {
@@ -79,11 +47,10 @@ class UserTest extends TestCase
 
     public function setUp(): void
     {
-
-        $this->activityRepository   = new ActivityRepository(self::$db);
-        $this->permissionRepository = new PermissionRepository(self::$db,$this->activityRepository);
-        $this->roleRepository       = new RoleRepository(self::$db, $this->permissionRepository);
-        $this->userRepository       = new UserRepository(self::$db, $this->roleRepository);
+        $activityRepository = new ActivityRepository(self::$db);
+        $permissionRepository = new PermissionRepository(self::$db, $activityRepository);
+        $roleRepository = new RoleRepository(self::$db, $permissionRepository);
+        $this->userRepository = new UserRepository(self::$db, $roleRepository);
     }
 
 
