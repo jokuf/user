@@ -53,7 +53,7 @@ class UserRepository implements UserRepositoryInterface
      */
     public function findByEmail(string $email): UserInterface
     {
-        $q = "SELECT id FROM user WHERE email=:email";
+        $q = "SELECT id FROM users WHERE email=:email";
 
         $stmt = $this->db->execute($q, [":email" => $email]);
 

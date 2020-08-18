@@ -4,8 +4,6 @@
 namespace Jokuf\User;
 
 
-use DateTime;
-
 use Firebase\JWT\JWT;
 use Jokuf\User\Authorization\AuthorizationInterface;
 use Jokuf\User\Infrastructure\Repository\UserRepository;
