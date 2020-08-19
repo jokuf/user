@@ -8,8 +8,14 @@ use PDO;
 
 /** @noinspection PhpComposerExtensionStubsInspection */
 
-class MySqlDB extends PDO
+class MySqlDB
 {
+    private static $inTransaction = false;
+    /**
+     * @var PDO
+     */
+    private $db;
+
     public function __construct(array $config) {
         /** @noinspection PhpComposerExtensionStubsInspection */
         $defaultOptions = [
@@ -34,10 +40,13 @@ class MySqlDB extends PDO
 
         }
 
-        /** @noinspection PhpComposerExtensionStubsInspection */
-        parent::__construct($dsn, $user, $pass, $options);
+        $this->db = new PDO($dsn, $user, $pass, $options);
+        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    }
 
-        $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    public function query($statement, $mode=PDO::FETCH_ASSOC)
+    {
+        $this->db->query($statement, $mode);
     }
 
     /**
@@ -48,7 +57,7 @@ class MySqlDB extends PDO
     public function insert(string $q, array $params) {
         $this->execute($q, $params);
 
-        return $this->lastInsertId();
+        return $this->db->lastInsertId();
     }
 
     /**
@@ -57,9 +66,46 @@ class MySqlDB extends PDO
      * @return bool|\PDOStatement
      */
     public function execute(string $q, array $params) {
-        $stmt = $this->prepare($q);
+        $stmt = $this->db->prepare($q);
         $stmt->execute($params);
 
         return $stmt;
+    }
+
+    public function prepare($statement, array $driver_options = array())
+    {
+        return $this->db->prepare($statement, $driver_options);
+    }
+
+    public function lastInsertId()
+    {
+        return $this->db->lastInsertId();
+    }
+
+    public function transactionStart() {
+        if (true === self::$inTransaction) {
+            throw new \Exception('Transaction already started');
+        }
+
+        $this->db->beginTransaction();
+        self::$inTransaction = true;
+
+    }
+
+    public function transactionRevert() {
+        if (false === self::$inTransaction) {
+            throw new \Exception('Cannot revert not started transaction');
+        }
+
+        $this->db->rollBack();
+        self::$inTransaction = false;
+    }
+
+    public function transactioCommit() {
+        if (false === self::$inTransaction) {
+            throw new \Exception('Cannot commit not started transaction');
+        }
+        $this->db->commit();
+        self::$inTransaction = false;
     }
 }

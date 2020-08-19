@@ -2,14 +2,12 @@
 
 
 use Jokuf\User\Activity;
+use Jokuf\User\AnonymousUser;
 use Jokuf\User\AuthorizationService;
 use Jokuf\User\Infrastructure\MySqlDB;
-use Jokuf\User\Infrastructure\Repository\ActivityRepository;
-use Jokuf\User\Infrastructure\Repository\PermissionRepository;
-use Jokuf\User\Infrastructure\Repository\RoleRepository;
-use Jokuf\User\Infrastructure\Repository\UserRepository;
 use Jokuf\User\Permission;
 use Jokuf\User\Role;
+use Jokuf\User\UserService;
 use PHPUnit\Framework\TestCase;
 
 class AuthorizationServiceTest extends TestCase
@@ -19,9 +17,9 @@ class AuthorizationServiceTest extends TestCase
      */
     private static $db;
     /**
-     * @var UserRepository
+     * @var UserService
      */
-    private $mapper;
+    private $userService;
 
     public static function setUpBeforeClass(): void
     {
@@ -52,22 +50,11 @@ class AuthorizationServiceTest extends TestCase
 
     public function setUp(): void
     {
-
-        $this->mapper=
-            new UserRepository(
-                self::$db,
-                new RoleRepository(
-                    self::$db,
-                    new PermissionRepository(
-                        self::$db,
-                        new ActivityRepository(
-                            self::$db
-                        )
-                    )));
+        $this->userService= new UserService(self::$db);
     }
 
     public function testAuthenticateExpectedReturnTrue() {
-        $service    = new AuthorizationService($this->mapper);
+        $service    = new AuthorizationService($this->userService);
         $role       = new Role(null, 'Administrator');
         $permission = new Permission(null, 'Create game');
         $permission
@@ -78,14 +65,14 @@ class AuthorizationServiceTest extends TestCase
         $user = new Jokuf\User\User(null, 'iordanov_@mail.bg', 'Radoslav', 'Yordanov', 'hashedpass');
         $user->addRole($role);
 
-        $user = $this->mapper->insert($user);
+        $this->userService->save($user);
 
         $this->assertTrue($service->authorize($user, '/api/v1/roles/1/users','POST'), 'Test authenticate service return true');
     }
 
     public function testFindOrCreateTokenMethodReturnsValidGuestJWTTokenWhenInvalidTokenIsProvided()
     {
-        $service = new AuthorizationService($this->mapper);
+        $service = new AuthorizationService($this->userService);
         $user = $service->getUserFromToken('sadsadafa');
         $token = $service->createTokenFor($user);
 

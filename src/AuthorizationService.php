@@ -6,12 +6,10 @@ namespace Jokuf\User;
 
 use Firebase\JWT\JWT;
 use Jokuf\User\Authorization\AuthorizationInterface;
-use Jokuf\User\Infrastructure\Repository\UserRepository;
 use Jokuf\User\User\UserInterface;
-use Jokuf\User\User\UserRepositoryInterface;
 
 
-if(!defined('JWT_SECRET'))
+if (!defined('JWT_SECRET'))
     define('JWT_SECRET', hash('sha3-512' , 'pass'));
 
 if (!defined('JWT_EXPIRE_TIME'))
@@ -22,17 +20,17 @@ class AuthorizationService implements AuthorizationInterface
 {
     private $storage;
     /**
-     * @var UserRepository
+     * @var UserService
      */
-    private $userRepository;
+    private $userService;
 
     /**
      * AuthorizationService constructor.
-     * @param UserRepositoryInterface $userRepository
+     * @param UserService $userService
      */
-    public function __construct(UserRepositoryInterface $userRepository)
+    public function __construct(UserService $userService)
     {
-        $this->userRepository = $userRepository;
+        $this->userService = $userService;
         $this->storage = [];
     }
 
@@ -41,7 +39,9 @@ class AuthorizationService implements AuthorizationInterface
         try {
             $payload = JWT::decode($serializedToken, JWT_SECRET, ['HS256']);
 
-            return $this->userRepository->findByEmail($payload->identity);
+            if ($user = $this->userService->findByEmail($payload->identity) ) {
+                return $user;
+            }
         } catch (\Exception $e) {
         }
 
@@ -77,6 +77,9 @@ class AuthorizationService implements AuthorizationInterface
 
     public function revokeToken(string $token): void
     {
+        if (isset($this->storage[$token])){
+            unset($this->storage[$token]);
+        }
     }
 
     private function getToken(UserInterface $user): ?string
