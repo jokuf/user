@@ -13,7 +13,7 @@ if (!defined('JWT_SECRET'))
     define('JWT_SECRET', hash('sha3-512' , 'pass'));
 
 if (!defined('JWT_EXPIRE_TIME'))
-    define('JWT_EXPIRE_TIME', '45 minutes');
+    define('JWT_EXPIRE_TIME', 45 * 60);
 
 
 class AuthorizationService implements AuthorizationInterface
@@ -65,6 +65,7 @@ class AuthorizationService implements AuthorizationInterface
                 "iss" => $_SERVER['HTTP_HOST'] ?? 'local',
                 "aud" => $_SERVER['HTTP_HOST'] ?? 'local',
                 "iat" => time(),
+                "exp" => time() + JWT_EXPIRE_TIME,
                 'identity' => $user->getEmail()
             ],
             JWT_SECRET,
