@@ -1,13 +1,13 @@
 <?php
 
 
+use Jokuf\Contract\User\UserInterface;
 use Jokuf\User\Infrastructure\Repository\ActivityRepository;
 use Jokuf\User\Infrastructure\Repository\PermissionRepository;
 use Jokuf\User\Infrastructure\Repository\RoleRepository;
 use Jokuf\User\Infrastructure\Repository\UserRepository;
 use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\User;
-use Jokuf\User\User\UserInterface;
 use PHPUnit\Framework\TestCase;
 
 class UserTest extends TestCase

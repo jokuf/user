@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Jokuf\User\User\Exception;
+namespace Jokuf\User\Exception;
 
 
 use Throwable;

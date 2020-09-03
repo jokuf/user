@@ -4,10 +4,10 @@
 namespace Jokuf\User\Infrastructure\Repository;
 
 
-use Jokuf\User\Authorization\ActivityRepositoryInterface;
-use Jokuf\User\Authorization\Exception\PermissionDeniedException;
-use Jokuf\User\Authorization\PermissionInterface;
-use Jokuf\User\Authorization\PermissionRepositoryInterface;
+use Jokuf\Contract\Authorization\ActivityRepositoryInterface;
+use Jokuf\Contract\Authorization\PermissionInterface;
+use Jokuf\Contract\Authorization\PermissionRepositoryInterface;
+use Jokuf\User\Exception\PermissionDeniedException;
 use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\Permission;
 

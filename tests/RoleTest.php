@@ -1,9 +1,6 @@
 <?php
 
 
-use Jokuf\User\Infrastructure\Factory\ActivityFactory;
-use Jokuf\User\Infrastructure\Factory\PermissionFactotry;
-use Jokuf\User\Infrastructure\Factory\RoleFactory;
 use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\Infrastructure\Repository\ActivityRepository;
 use Jokuf\User\Infrastructure\Repository\PermissionRepository;

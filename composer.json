@@ -6,9 +6,21 @@
             "email": "jokuf2010@gmail.com"
         }
     ],
+    "minimum-stability": "dev",
     "require": {
-        "firebase/php-jwt": "^5.2"
+        "firebase/php-jwt": "^5.2",
+        "jokuf/user-dev": "*"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/jokuf/user-dev.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/jokuf/authorization-dev.git"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Jokuf\\User\\": "src/"

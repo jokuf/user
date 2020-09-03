@@ -1,12 +1,13 @@
 <?php
 
 
-namespace Jokuf\User;
+namespace Jokuf\User\Service;
 
 
 use Firebase\JWT\JWT;
-use Jokuf\User\Authorization\AuthorizationInterface;
-use Jokuf\User\User\UserInterface;
+use Jokuf\Contract\Authorization\AuthorizationInterface;
+use Jokuf\Contract\User\UserInterface;
+use Jokuf\User\AnonymousUser;
 
 
 if (!defined('JWT_SECRET'))

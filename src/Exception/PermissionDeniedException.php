@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Jokuf\User\Authorization\Exception;
+namespace Jokuf\User\Exception;
 
 
 class PermissionDeniedException extends \Exception

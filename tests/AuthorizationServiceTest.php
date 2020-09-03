@@ -2,12 +2,11 @@
 
 
 use Jokuf\User\Activity;
-use Jokuf\User\AnonymousUser;
-use Jokuf\User\AuthorizationService;
 use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\Permission;
 use Jokuf\User\Role;
-use Jokuf\User\UserService;
+use Jokuf\User\Service\AuthorizationService;
+use Jokuf\User\Service\UserService;
 use PHPUnit\Framework\TestCase;
 
 class AuthorizationServiceTest extends TestCase

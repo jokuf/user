@@ -4,8 +4,9 @@
 namespace Jokuf\User;
 
 
-use Jokuf\User\User\RoleInterface;
-use Jokuf\User\User\UserInterface;
+
+use Jokuf\Contract\Authorization\RoleInterface;
+use Jokuf\Contract\User\UserInterface;
 
 class User implements UserInterface
 {

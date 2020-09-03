@@ -4,8 +4,9 @@
 namespace Jokuf\User;
 
 
-use Jokuf\User\Authorization\ActivityInterface;
-use Jokuf\User\Authorization\PermissionInterface;
+
+use Jokuf\Contract\Authorization\ActivityInterface;
+use Jokuf\Contract\Authorization\PermissionInterface;
 
 class Permission implements PermissionInterface
 {

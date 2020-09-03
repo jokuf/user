@@ -2,8 +2,6 @@
 
 
 use Jokuf\User\Activity;
-use Jokuf\User\Infrastructure\Factory\ActivityFactory;
-use Jokuf\User\Infrastructure\Factory\PermissionFactotry;
 use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\Infrastructure\Repository\ActivityRepository;
 use Jokuf\User\Infrastructure\Repository\PermissionRepository;
@@ -24,14 +22,6 @@ class PermissionTest extends TestCase
      * @var ActivityRepository
      */
     private $activityMapper;
-    /**
-     * @var PermissionFactotry
-     */
-    private $permissionFactory;
-    /**
-     * @var ActivityFactory
-     */
-    private $activityFactory;
 
     public static function setUpBeforeClass(): void
     {

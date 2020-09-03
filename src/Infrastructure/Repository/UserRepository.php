@@ -4,15 +4,14 @@
 namespace Jokuf\User\Infrastructure\Repository;
 
 
-use Jokuf\User\Authorization\Exception\PermissionDeniedException;
-use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\User;
-use Jokuf\User\User\Exception\UserNotFoundException;
-use Jokuf\User\User\Exception\UserShoildBeTakenFromTheRepositoryFirst;
-use Jokuf\User\User\Factory\UserFactoryInterface;
-use Jokuf\User\User\RoleRepositoryInterface;
-use Jokuf\User\User\UserInterface;
-use Jokuf\User\User\UserRepositoryInterface;
+use Jokuf\Contract\Authorization\RoleRepositoryInterface;
+use Jokuf\Contract\User\UserInterface;
+use Jokuf\Contract\User\UserRepositoryInterface;
+use Jokuf\User\Infrastructure\MySqlDB;
+use Jokuf\User\Exception\UserNotFoundException;
+use Jokuf\User\Exception\PermissionDeniedException;
+use Jokuf\User\Exception\UserShoildBeTakenFromTheRepositoryFirst;
 
 /**
  * Class UserRepository
@@ -118,7 +117,7 @@ class UserRepository implements UserRepositoryInterface
 
     /**
      * @param UserInterface $user
-     * @throws UserShoildBeTakenFromTheRepositoryFirst
+     * @throws UserShoildBeTakenFromTheRepositoryFirst|PermissionDeniedException
      */
     public function update(UserInterface $user): void
     {

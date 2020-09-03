@@ -4,7 +4,8 @@
 namespace Jokuf\User;
 
 
-use Jokuf\User\Authorization\ActivityInterface;
+
+use Jokuf\Contract\Authorization\ActivityInterface;
 
 class Activity implements ActivityInterface
 {

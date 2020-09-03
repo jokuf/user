@@ -3,9 +3,7 @@
 
 namespace Jokuf\User;
 
-
-use Jokuf\User\User\RoleInterface;
-use Jokuf\User\User\UserInterface;
+use Jokuf\Contract\User\UserInterface;
 
 class AnonymousUser implements UserInterface
 {
@@ -72,20 +70,6 @@ class AnonymousUser implements UserInterface
     public function getRoles(): array
     {
         return [];
-    }
-
-    /**
-     * @param RoleInterface $role
-     */
-    public function addRole(RoleInterface $role)
-    {
-    }
-
-    /**
-     * @param RoleInterface $role
-     */
-    public function removeRole(RoleInterface $role)
-    {
     }
 
     public function setId(int $id)

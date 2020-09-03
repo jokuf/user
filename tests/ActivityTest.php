@@ -1,8 +1,7 @@
 <?php
 
 
-use Jokuf\User\Authorization\ActivityInterface;
-use Jokuf\User\Infrastructure\Factory\ActivityFactory;
+use Jokuf\Contract\Authorization\ActivityInterface;
 use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\Infrastructure\Repository\ActivityRepository;
 use PHPUnit\Framework\TestCase;
@@ -17,10 +16,6 @@ class ActivityTest extends TestCase
      * @var ActivityRepository
      */
     private $activityMapper;
-    /**
-     * @var ActivityFactory
-     */
-    private $factory;
 
     public static function setUpBeforeClass(): void
     {

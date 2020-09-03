@@ -4,11 +4,11 @@
 namespace Jokuf\User\Infrastructure\Repository;
 
 
-use Jokuf\User\Authorization\Exception\PermissionDeniedException;
+use Jokuf\Contract\Authorization\RoleInterface;
+use Jokuf\Contract\Authorization\RoleRepositoryInterface;
+use Jokuf\User\Exception\PermissionDeniedException;
 use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\Role;
-use Jokuf\User\User\RoleInterface;
-use Jokuf\User\User\RoleRepositoryInterface;
 
 class RoleRepository implements RoleRepositoryInterface
 {

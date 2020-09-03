@@ -1,17 +1,17 @@
 <?php
 
 
-namespace Jokuf\User;
+namespace Jokuf\User\Service;
 
 
+use Jokuf\Contract\User\UserInterface;
+use Jokuf\Contract\User\UserServiceInterface;
+use Jokuf\User\Exception\UserNotFoundException;
 use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\Infrastructure\Repository\ActivityRepository;
 use Jokuf\User\Infrastructure\Repository\PermissionRepository;
 use Jokuf\User\Infrastructure\Repository\RoleRepository;
 use Jokuf\User\Infrastructure\Repository\UserRepository;
-use Jokuf\User\User\Exception\UserNotFoundException;
-use Jokuf\User\User\UserInterface;
-use Jokuf\User\User\UserServiceInterface;
 
 class UserService implements UserServiceInterface
 {
