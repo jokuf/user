@@ -1,11 +1,11 @@
 <?php
 
 
-use Jokuf\User\Activity;
+use Jokuf\User\Core\Entity\Permission;
+use Jokuf\User\Core\Entity\Activity;
 use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\Infrastructure\Repository\ActivityRepository;
 use Jokuf\User\Infrastructure\Repository\PermissionRepository;
-use Jokuf\User\Permission;
 use PHPUnit\Framework\TestCase;
 
 class PermissionTest extends TestCase

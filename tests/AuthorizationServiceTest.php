@@ -1,12 +1,13 @@
 <?php
 
 
-use Jokuf\User\Activity;
+use Jokuf\User\Core\Entity\Activity;
+use Jokuf\User\Core\Entity\Permission;
+use Jokuf\User\Core\Entity\Role;
+use Jokuf\User\Core\Entity\User;
 use Jokuf\User\Infrastructure\MySqlDB;
-use Jokuf\User\Permission;
-use Jokuf\User\Role;
+use Jokuf\User\Interactor\UserInteractor;
 use Jokuf\User\Service\AuthorizationService;
-use Jokuf\User\Service\UserService;
 use PHPUnit\Framework\TestCase;
 
 class AuthorizationServiceTest extends TestCase
@@ -16,7 +17,7 @@ class AuthorizationServiceTest extends TestCase
      */
     private static $db;
     /**
-     * @var UserService
+     * @var UserInteractor
      */
     private $userService;
 
@@ -49,7 +50,7 @@ class AuthorizationServiceTest extends TestCase
 
     public function setUp(): void
     {
-        $this->userService= new UserService(self::$db);
+        $this->userService= new UserInteractor(self::$db);
     }
 
     public function testAuthenticateExpectedReturnTrue() {
@@ -61,7 +62,7 @@ class AuthorizationServiceTest extends TestCase
 
         $role->addPermission($permission);
 
-        $user = new Jokuf\User\User(null, 'iordanov_@mail.bg', 'Radoslav', 'Yordanov', 'hashedpass');
+        $user = new User(null, 'iordanov_@mail.bg', 'Radoslav', 'Yordanov', 'hashedpass');
         $user->addRole($role);
 
         $this->userService->save($user);

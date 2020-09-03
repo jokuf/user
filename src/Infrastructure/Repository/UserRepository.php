@@ -4,7 +4,7 @@
 namespace Jokuf\User\Infrastructure\Repository;
 
 
-use Jokuf\User\User;
+use Jokuf\User\Core\Entity\User;
 use Jokuf\Contract\Authorization\RoleRepositoryInterface;
 use Jokuf\Contract\User\UserInterface;
 use Jokuf\Contract\User\UserRepositoryInterface;

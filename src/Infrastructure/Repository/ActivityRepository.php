@@ -6,7 +6,7 @@ namespace Jokuf\User\Infrastructure\Repository;
 
 use Jokuf\Contract\Authorization\ActivityInterface;
 use Jokuf\Contract\Authorization\ActivityRepositoryInterface;
-use Jokuf\User\Activity;
+use Jokuf\User\Core\Entity\Activity;
 use Jokuf\User\Exception\PermissionDeniedException;
 use Jokuf\User\Infrastructure\MySqlDB;
 

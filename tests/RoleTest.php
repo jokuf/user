@@ -1,6 +1,9 @@
 <?php
 
 
+use Jokuf\User\Core\Entity\Activity;
+use Jokuf\User\Core\Entity\Permission;
+use Jokuf\User\Core\Entity\Role;
 use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\Infrastructure\Repository\ActivityRepository;
 use Jokuf\User\Infrastructure\Repository\PermissionRepository;
@@ -54,7 +57,7 @@ class RoleTest extends TestCase
     }
 
     public function testCreate() {
-        $role = new \Jokuf\User\Role(null, 'Create game');
+        $role = new Role(null, 'Create game');
         $role = $this->repository->insert($role);
 
 
@@ -71,7 +74,7 @@ class RoleTest extends TestCase
     public function testUpdate() {
         $role = $this->repository->findForId(1);
 
-        $updatedRole = new \Jokuf\User\Role(1, 'sadsadfa');
+        $updatedRole = new Role(1, 'sadsadfa');
         $this->repository->update($updatedRole);
 
         $stmt = self::$db->execute('SELECT * FROM roles WHERE id=:id', [":id"=>  $updatedRole->getId()]);
@@ -91,15 +94,15 @@ class RoleTest extends TestCase
     }
 
     public function testCreateRoleAndAttachPermissionWithSomeDummyActivities() {
-        $role = new \Jokuf\User\Role(null, 'Admin');
+        $role = new Role(null, 'Admin');
 
-        $permission = new \Jokuf\User\Permission(null, 'Create game');
+        $permission = new Permission(null, 'Create game');
         $permission
-            ->addActivity(new \Jokuf\User\Activity(null, 'POST', ''));
+            ->addActivity(new Activity(null, 'POST', ''));
 
-        $permission2 = new \Jokuf\User\Permission(null, 'Delete game');
+        $permission2 = new Permission(null, 'Delete game');
         $permission2
-            ->addActivity(new \Jokuf\User\Activity(null, 'POST', ''));
+            ->addActivity(new Activity(null, 'POST', ''));
 
         $role
             ->addPermission($permission)

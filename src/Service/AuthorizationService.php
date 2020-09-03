@@ -7,7 +7,8 @@ namespace Jokuf\User\Service;
 use Firebase\JWT\JWT;
 use Jokuf\Contract\Authorization\AuthorizationInterface;
 use Jokuf\Contract\User\UserInterface;
-use Jokuf\User\AnonymousUser;
+use Jokuf\User\Core\Entity\AnonymousUser;
+use Jokuf\User\Interactor\UserInteractor;
 
 
 if (!defined('JWT_SECRET'))
@@ -21,15 +22,15 @@ class AuthorizationService implements AuthorizationInterface
 {
     private $storage;
     /**
-     * @var UserService
+     * @var UserInteractor
      */
     private $userService;
 
     /**
      * AuthorizationService constructor.
-     * @param UserService $userService
+     * @param UserInteractor $userService
      */
-    public function __construct(UserService $userService)
+    public function __construct(UserInteractor $userService)
     {
         $this->userService = $userService;
         $this->storage = [];

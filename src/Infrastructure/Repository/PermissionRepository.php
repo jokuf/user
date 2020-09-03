@@ -7,9 +7,9 @@ namespace Jokuf\User\Infrastructure\Repository;
 use Jokuf\Contract\Authorization\ActivityRepositoryInterface;
 use Jokuf\Contract\Authorization\PermissionInterface;
 use Jokuf\Contract\Authorization\PermissionRepositoryInterface;
+use Jokuf\User\Core\Entity\Permission;
 use Jokuf\User\Exception\PermissionDeniedException;
 use Jokuf\User\Infrastructure\MySqlDB;
-use Jokuf\User\Permission;
 
 class PermissionRepository implements PermissionRepositoryInterface
 {

@@ -8,7 +8,7 @@ use Jokuf\Contract\Authorization\RoleInterface;
 use Jokuf\Contract\Authorization\RoleRepositoryInterface;
 use Jokuf\User\Exception\PermissionDeniedException;
 use Jokuf\User\Infrastructure\MySqlDB;
-use Jokuf\User\Role;
+use Jokuf\User\Core\Entity\Role;
 
 class RoleRepository implements RoleRepositoryInterface
 {

@@ -2,6 +2,7 @@
 
 
 use Jokuf\Contract\Authorization\ActivityInterface;
+use Jokuf\User\Core\Entity\Activity;
 use Jokuf\User\Infrastructure\MySqlDB;
 use Jokuf\User\Infrastructure\Repository\ActivityRepository;
 use PHPUnit\Framework\TestCase;
@@ -50,11 +51,11 @@ class ActivityTest extends TestCase
     }
 
     public function testCanCreateActivity() {
-        $this->assertInstanceOf(ActivityInterface::class, new \Jokuf\User\Activity(null, 'POST', '[]'));
+        $this->assertInstanceOf(ActivityInterface::class, new Activity(null, 'POST', '[]'));
     }
 
     public function testCreateAndSaveActivity() {
-        $activity = new \Jokuf\User\Activity(null,  'POST', '/regex');
+        $activity = new Activity(null,  'POST', '/regex');
         $activity = $this->activityMapper->insert($activity);
 
         $this->assertEquals(1, $activity->getId());
@@ -68,7 +69,7 @@ class ActivityTest extends TestCase
 
     public function testUpdateActivity() {
         $activity = $this->activityMapper->findFromId(1);
-        $updatedActivity = new \Jokuf\User\Activity(1, 'asdsafa', 'sdfasa');
+        $updatedActivity = new Activity(1, 'asdsafa', 'sdfasa');
 
         $this->activityMapper->update($updatedActivity);
 

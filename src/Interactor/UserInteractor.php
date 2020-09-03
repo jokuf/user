@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Jokuf\User\Service;
+namespace Jokuf\User\Interactor;
 
 
 use Jokuf\Contract\User\UserInterface;
@@ -13,7 +13,7 @@ use Jokuf\User\Infrastructure\Repository\PermissionRepository;
 use Jokuf\User\Infrastructure\Repository\RoleRepository;
 use Jokuf\User\Infrastructure\Repository\UserRepository;
 
-class UserService implements UserServiceInterface
+class UserInteractor implements UserServiceInterface
 {
     /**
      * @var UserRepository
