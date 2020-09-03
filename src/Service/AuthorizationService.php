@@ -24,7 +24,7 @@ class AuthorizationService implements AuthorizationInterface
     /**
      * @var UserInteractor
      */
-    private $userService;
+    private $userInteractor;
 
     /**
      * AuthorizationService constructor.
@@ -32,7 +32,7 @@ class AuthorizationService implements AuthorizationInterface
      */
     public function __construct(UserInteractor $userService)
     {
-        $this->userService = $userService;
+        $this->userInteractor = $userService;
         $this->storage = [];
     }
 
@@ -41,7 +41,7 @@ class AuthorizationService implements AuthorizationInterface
         try {
             $payload = JWT::decode($serializedToken, JWT_SECRET, ['HS256']);
 
-            if ($user = $this->userService->findByEmail($payload->identity) ) {
+            if ($user = $this->userInteractor->findByEmail($payload->identity) ) {
                 return $user;
             }
         } catch (\Exception $e) {
